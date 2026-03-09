@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Flame, Dumbbell, PlusCircle, UtensilsCrossed, TrendingUp, Loader2 } from "lucide-react";
+import { Flame, Dumbbell, PlusCircle, UtensilsCrossed, TrendingUp, Loader2, Zap } from "lucide-react";
 import CalorieChart from "@/components/CalorieChart";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
@@ -64,7 +64,8 @@ function DashboardContent() {
   }, [user]);
 
   const todayCalories = todayLog?.foods.reduce((s, f) => s + f.totalCalories, 0) ?? 0;
-  const workoutCount = todayLog?.exercises.length ?? 0;
+  const workoutCount  = todayLog?.exercises.length ?? 0;
+  const todayBurned   = todayLog?.exercises.reduce((s, e) => s + (e.caloriesBurned || 0), 0) ?? 0;
   const avgCalories =
     weeklyData.length > 0
       ? Math.round(weeklyData.reduce((s, d) => s + d.calories, 0) / weeklyData.length)
@@ -93,7 +94,7 @@ function DashboardContent() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={Flame}
           label="Today's Calories"
@@ -109,6 +110,14 @@ function DashboardContent() {
           sub={workoutCount > 0 ? "exercises completed" : "Log an exercise"}
           iconClass="text-blue-400"
           bgClass="bg-blue-500/10"
+        />
+        <StatCard
+          icon={Zap}
+          label="Calories Burned"
+          value={todayBurned > 0 ? `−${todayBurned.toLocaleString()} kcal` : "No data"}
+          sub={todayBurned > 0 ? "from today's exercises" : "Log an exercise"}
+          iconClass="text-orange-400"
+          bgClass="bg-orange-500/10"
         />
         <StatCard
           icon={TrendingUp}

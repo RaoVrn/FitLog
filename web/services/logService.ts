@@ -69,6 +69,7 @@ export async function getWeeklyLogs(userId: string): Promise<DailyLog[]> {
       foods: [],
       exercises: [],
       totalCalories: 0,
+      totalBurned: 0,
     };
   });
 }

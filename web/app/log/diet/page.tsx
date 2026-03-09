@@ -8,6 +8,7 @@ import { getFoods } from "@/services/foodService";
 import { getTodayLog, saveLog, todayDateStr } from "@/services/logService";
 import { calculateCalories } from "@/utils/calorieCalculator";
 import { Food, FoodEntry } from "@/types";
+import toast from "react-hot-toast";
 
 function LogDietContent() {
   const { user } = useAuth();
@@ -56,11 +57,14 @@ function LogDietContent() {
     setSelectedFoodId("");
     setQuantity("1");
     setSaved(false);
+    toast.success(`${selectedFood.name} added to today's log.`);
   };
 
   const handleRemove = (index: number) => {
+    const removed = entries[index];
     setEntries((prev) => prev.filter((_, i) => i !== index));
     setSaved(false);
+    toast(`${removed.foodName} removed from log.`, { icon: "🗑️" });
   };
 
   const handleSave = async () => {
@@ -74,10 +78,13 @@ function LogDietContent() {
         foods: entries,
         exercises: existing?.exercises ?? [],
         totalCalories,
+        totalBurned: existing?.exercises.reduce((s, e) => s + (e.caloriesBurned || 0), 0) ?? 0,
       });
       setSaved(true);
+      toast.success(`Diet log saved — ${totalCalories} kcal recorded!`);
     } catch (err) {
       console.error("Failed to save log:", err);
+      toast.error("Failed to save diet log.");
     } finally {
       setSaving(false);
     }
@@ -125,7 +132,7 @@ function LogDietContent() {
                 <option value="">Select a food...</option>
                 {foods.map((food) => (
                   <option key={food.id} value={food.id}>
-                    {food.name} — {food.caloriesPerUnit} kcal/{food.unit}
+                    {food.name} ({food.caloriesPerUnit} kcal / {food.unit})
                   </option>
                 ))}
               </select>

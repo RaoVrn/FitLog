@@ -7,6 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { getTodayLog, saveLog, todayDateStr } from "@/services/logService";
 import { Exercise } from "@/types";
+import toast from "react-hot-toast";
 
 const EXERCISE_TEMPLATES = [
   { name: "Push-ups", caloriesBurned: 50 },
@@ -70,11 +71,14 @@ function LogExerciseContent() {
     setReps("10");
     setDuration("30");
     setSaved(false);
+    toast.success(`${exercise.name} added to workout.`);
   };
 
   const handleDelete = (id: string) => {
+    const ex = exercises.find((e) => e.id === id);
     setExercises((prev) => prev.filter((e) => e.id !== id));
     setSaved(false);
+    if (ex) toast(`${ex.name} removed.`, { icon: "🗑️" });
   };
 
   const totalCalsBurned = exercises.reduce((s, e) => s + (e.caloriesBurned || 0), 0);
@@ -90,10 +94,13 @@ function LogExerciseContent() {
         foods: existingLog?.foods ?? [],
         exercises,
         totalCalories: existingLog?.foods.reduce((s, f) => s + f.totalCalories, 0) ?? 0,
+        totalBurned: exercises.reduce((s, e) => s + (e.caloriesBurned || 0), 0),
       });
       setSaved(true);
+      toast.success(`Workout saved — ${exercises.length} exercise${exercises.length !== 1 ? "s" : ""} logged!`);
     } catch (err) {
       console.error("Failed to save exercises:", err);
+      toast.error("Failed to save workout log.");
     } finally {
       setSaving(false);
     }

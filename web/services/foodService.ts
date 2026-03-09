@@ -6,15 +6,32 @@ import {
   doc,
   query,
   orderBy,
+  where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Food } from "@/types";
+
+/** Returns true if a food with the same name (case-insensitive) already exists. */
+export async function foodExists(
+  userId: string,
+  name: string
+): Promise<boolean> {
+  const q = query(
+    collection(db, "users", userId, "foods"),
+    where("name", "==", name.trim())
+  );
+  const snap = await getDocs(q);
+  return !snap.empty;
+}
 
 export async function addFood(
   userId: string,
   food: Omit<Food, "id">
 ): Promise<string> {
-  const ref = await addDoc(collection(db, "users", userId, "foods"), food);
+  const ref = await addDoc(collection(db, "users", userId, "foods"), {
+    ...food,
+    name: food.name.trim(),
+  });
   return ref.id;
 }
 

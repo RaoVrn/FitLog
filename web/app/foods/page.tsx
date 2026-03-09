@@ -5,8 +5,9 @@ import { Food } from "@/types";
 import FoodItem from "@/components/FoodItem";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
-import { getFoods, addFood, deleteFood } from "@/services/foodService";
+import { getFoods, addFood, deleteFood, foodExists } from "@/services/foodService";
 import { Plus, Search, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 function FoodsContent() {
   const { user } = useAuth();
@@ -17,7 +18,6 @@ function FoodsContent() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -28,7 +28,7 @@ function FoodsContent() {
         setFoods(data);
       } catch (e) {
         console.error("Failed to load foods:", e);
-        setError("Failed to load foods.");
+        toast.error("Failed to load your food database.");
       } finally {
         setLoading(false);
       }
@@ -39,13 +39,19 @@ function FoodsContent() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !name.trim() || !calories) return;
-    const newFood: Omit<Food, "id"> = {
-      name: name.trim(),
-      caloriesPerUnit: parseFloat(calories),
-      unit: unit.trim() || "unit",
-    };
     setSaving(true);
     try {
+      const duplicate = await foodExists(user.uid, name.trim());
+      if (duplicate) {
+        toast.error(`"${name.trim()}" already exists in your database.`);
+        setSaving(false);
+        return;
+      }
+      const newFood: Omit<Food, "id"> = {
+        name: name.trim(),
+        caloriesPerUnit: parseFloat(calories),
+        unit: unit.trim() || "unit",
+      };
       const id = await addFood(user.uid, newFood);
       setFoods((prev) =>
         [...prev, { ...newFood, id }].sort((a, b) => a.name.localeCompare(b.name))
@@ -53,9 +59,10 @@ function FoodsContent() {
       setName("");
       setCalories("");
       setUnit("");
+      toast.success(`${newFood.name} added to your food database!`);
     } catch (e) {
       console.error("Failed to add food:", e);
-      setError("Failed to add food.");
+      toast.error("Failed to add food. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -63,11 +70,14 @@ function FoodsContent() {
 
   const handleDelete = async (id: string) => {
     if (!user) return;
+    const food = foods.find((f) => f.id === id);
     try {
       await deleteFood(user.uid, id);
       setFoods((prev) => prev.filter((f) => f.id !== id));
+      toast.success(food ? `${food.name} deleted.` : "Food deleted.");
     } catch (e) {
       console.error("Failed to delete food:", e);
+      toast.error("Failed to delete food.");
     }
   };
 
@@ -86,9 +96,6 @@ function FoodsContent() {
       {/* Add food form */}
       <div className="rounded-xl bg-slate-800 p-6 shadow-lg ring-1 ring-slate-700/50">
         <h2 className="mb-4 font-semibold text-slate-200">Add New Food</h2>
-        {error && (
-          <p className="mb-3 rounded-lg bg-red-500/10 px-4 py-2.5 text-sm text-red-400 ring-1 ring-red-500/20">{error}</p>
-        )}
         <form onSubmit={handleAdd} className="grid gap-3 sm:grid-cols-4">
           <input
             type="text"

@@ -28,6 +28,7 @@ export interface DailyLog {
   foods: FoodEntry[];
   exercises: Exercise[];
   totalCalories: number;
+  totalBurned?: number;
 }
 
 export interface WeeklyData {
