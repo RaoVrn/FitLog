@@ -6,7 +6,7 @@ import FoodItem from "@/components/FoodItem";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { getFoods, addFood, deleteFood, deleteAllFoods, foodExists, updateFood } from "@/services/foodService";
-import { Plus, Search, Loader2, Pencil, X, Check, Flame, Trash2, Database } from "lucide-react";
+import { Plus, Search, Loader2, Pencil, X, Check, Flame, Trash2, Database, ChevronDown } from "lucide-react";
 import { SkeletonList } from "@/components/Skeleton";
 import toast from "react-hot-toast";
 
@@ -45,6 +45,10 @@ function FoodsContent() {
   const [saving, setSaving] = useState(false);
   const [editState, setEditState] = useState<EditState | null>(null);
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [quickAddSearch, setQuickAddSearch] = useState("");
+  const [addFormOpen, setAddFormOpen] = useState(true);
+  const [foodsOpen, setFoodsOpen] = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -196,20 +200,48 @@ function FoodsContent() {
         </span>
       </div>
 
-      {/* ── Quick Add (full-width strip) ── */}
-      <div className="flex items-center gap-3 rounded-xl bg-slate-800/60 px-4 py-2.5 ring-1 ring-slate-700/50">
-        <span className="shrink-0 text-[11px] font-semibold uppercase tracking-widest text-slate-500">Quick Add</span>
-        <div className="flex flex-wrap gap-1.5">
-          {QUICK_ADD_FOODS.map((f) => (
-            <button
-              key={f.name}
-              onClick={() => handleQuickAdd(f)}
-              className="rounded-full border border-slate-600 bg-slate-700/70 px-3 py-1 text-xs text-slate-300 transition hover:border-green-500/60 hover:bg-green-500/10 hover:text-green-300"
-            >
-              {f.name}
-            </button>
-          ))}
+      {/* ── Quick Add (collapsible) ── */}
+      <div className="overflow-hidden rounded-xl bg-slate-800/60 ring-1 ring-slate-600">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setQuickAddOpen((o) => !o)}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setQuickAddOpen((o) => !o); }}
+          className="flex w-full cursor-pointer items-center justify-between px-4 py-2.5 transition hover:bg-slate-700/40"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Quick Add</span>
+            <span className="rounded-full bg-slate-700 px-2 py-0.5 text-[11px] text-slate-300">{QUICK_ADD_FOODS.length} presets</span>
+          </div>
+          <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${quickAddOpen ? "rotate-180" : ""}`} />
         </div>
+        {quickAddOpen && (
+          <div className="border-t border-slate-700/50 px-4 pb-3 pt-2.5 space-y-2.5">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search presets…"
+                value={quickAddSearch}
+                onChange={(e) => setQuickAddSearch(e.target.value)}
+                className="w-full rounded-lg bg-slate-700/60 py-1.5 pl-9 pr-4 text-sm text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-600 transition focus:ring-green-500"
+              />
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {QUICK_ADD_FOODS
+                .filter((f) => !quickAddSearch || f.name.toLowerCase().includes(quickAddSearch.toLowerCase()))
+                .map((f) => (
+                <button
+                  key={f.name}
+                  onClick={() => handleQuickAdd(f)}
+                  className="rounded-full border border-slate-600 bg-slate-700/70 px-3 py-1 text-xs text-slate-300 transition hover:border-green-500/60 hover:bg-green-500/10 hover:text-green-300"
+                >
+                  {f.name} <span className="text-slate-500">{f.caloriesPerUnit} kcal</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Main two-column layout ── */}
@@ -289,14 +321,25 @@ function FoodsContent() {
               </form>
             </div>
           ) : (
-            /* ── Add form ── */
-            <div className="rounded-xl bg-slate-800 p-5 shadow ring-1 ring-slate-700/50">
-              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-100">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-green-500/15">
-                  <Plus className="h-3.5 w-3.5 text-green-400" />
-                </span>
-                Add New Food
-              </h2>
+            /* ── Add form (collapsible) ── */
+            <div className="rounded-xl bg-slate-800 ring-1 ring-slate-600">
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setAddFormOpen((o) => !o)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setAddFormOpen((o) => !o); }}
+                className="flex w-full cursor-pointer items-center justify-between px-5 py-3.5 transition hover:bg-slate-700/40 rounded-xl"
+              >
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-green-500/15">
+                    <Plus className="h-3.5 w-3.5 text-green-400" />
+                  </span>
+                  Add New Food
+                </h2>
+                <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${addFormOpen ? "rotate-180" : ""}`} />
+              </div>
+              {addFormOpen && (
+              <div className="border-t border-slate-700/50 p-5">
               <form onSubmit={handleAdd} className="space-y-3">
                 <div>
                   <label className="mb-1 block text-xs text-slate-500">Food name *</label>
@@ -349,71 +392,84 @@ function FoodsContent() {
                   {saving ? "Saving..." : "Add Food"}
                 </button>
               </form>
+              </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* RIGHT — Search + food list */}
-        <div className="flex flex-col gap-3">
-          {/* Search bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <input
-              type="text" placeholder="Search foods..." value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-lg bg-slate-800 py-2.5 pl-9 pr-4 text-sm text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-700 transition focus:ring-green-500"
-            />
-          </div>
-
-          {/* Food count label + Delete All */}
-          {!loading && (
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-500">
-                Foods{" "}
-                <span className="rounded-full bg-slate-700 px-2 py-0.5 text-slate-300">
-                  {filtered.length}
-                </span>
-              </span>
-              {foods.length > 0 && (
-                <button
-                  onClick={() => setConfirmDeleteAll(true)}
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-slate-600 transition hover:bg-red-500/10 hover:text-red-400"
-                >
-                  <Trash2 className="h-3 w-3" /> Delete All
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Food list */}
-          {loading ? (
-            <SkeletonList rows={6} />
-          ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-800/40 py-14 text-center ring-1 ring-slate-700/40">
-              <Flame className="mb-2 h-8 w-8 text-slate-700" />
-              <p className="text-sm text-slate-500">
-                {foods.length === 0 ? "No foods yet. Add your first food." : "No foods match your search."}
-              </p>
-            </div>
-          ) : (
-            <div className="food-list-scroll">
-              <div className="space-y-1.5">
-                {filtered.map((food) => (
-                  <FoodItem key={food.id} food={food} onDelete={handleDelete} onEdit={handleEditStart} />
-                ))}
+        {/* RIGHT — Foods collapsible */}
+        <div className="flex flex-col gap-0">
+          <div className="overflow-hidden rounded-xl bg-slate-800/60 ring-1 ring-slate-600">
+            {/* Toggle header */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setFoodsOpen((o) => !o)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setFoodsOpen((o) => !o); }}
+              className="flex w-full cursor-pointer items-center justify-between px-4 py-2.5 transition hover:bg-slate-700/40"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-400">My Foods</span>
+                {!loading && (
+                  <span className="rounded-full bg-slate-700 px-2 py-0.5 text-[11px] text-slate-300">{filtered.length}</span>
+                )}
               </div>
+              <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${foodsOpen ? "rotate-180" : ""}`} />
             </div>
-          )}
+
+            {foodsOpen && (
+              <div className="border-t border-slate-700/50 px-3 pb-3 pt-2.5">
+                {/* Search + Delete All */}
+                <div className="mb-2.5 flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                    <input
+                      type="text" placeholder="Search foods..." value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="w-full rounded-lg bg-slate-700/60 py-2 pl-9 pr-4 text-sm text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-600 transition focus:ring-green-500"
+                    />
+                  </div>
+                  {!loading && foods.length > 0 && (
+                    <button
+                      onClick={() => setConfirmDeleteAll(true)}
+                      className="flex shrink-0 items-center gap-1 rounded-lg bg-red-500/10 px-3 py-2 text-xs font-medium text-red-400 ring-1 ring-red-500/20 transition hover:bg-red-500/20"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete All
+                    </button>
+                  )}
+                </div>
+
+                {/* Food list */}
+                {loading ? (
+                  <SkeletonList rows={6} />
+                ) : filtered.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center rounded-xl bg-slate-800/40 py-10 text-center ring-1 ring-slate-700/40">
+                    <Flame className="mb-2 h-8 w-8 text-slate-700" />
+                    <p className="text-sm text-slate-500">
+                      {foods.length === 0 ? "No foods yet. Add your first food." : "No foods match your search."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="food-list-scroll">
+                    <div className="space-y-1.5">
+                      {filtered.map((food) => (
+                        <FoodItem key={food.id} food={food} onDelete={handleDelete} onEdit={handleEditStart} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
       </div>
 
       {/* ── Delete All Modal ── */}
       {confirmDeleteAll && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          onKeyDown={(e) => { if (e.key === "Enter") handleDeleteAll(); if (e.key === "Escape") setConfirmDeleteAll(false); }}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-sm rounded-2xl bg-slate-800 p-6 shadow-2xl ring-1 ring-slate-700">
             <div className="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/15">
               <Trash2 className="h-5 w-5 text-red-400" />
@@ -422,21 +478,22 @@ function FoodsContent() {
             <p className="mt-1.5 text-sm text-slate-400">
               This will permanently delete all <span className="font-medium text-slate-200">{foods.length} foods</span> from your database. This action cannot be undone.
             </p>
-            <div className="mt-6 flex gap-3">
+            <form onSubmit={(e) => { e.preventDefault(); handleDeleteAll(); }} className="mt-6 flex gap-3">
               <button
+                type="button"
                 onClick={() => setConfirmDeleteAll(false)}
                 className="flex-1 rounded-xl border border-slate-600 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-slate-700"
               >
                 Cancel
               </button>
               <button
+                type="submit"
                 autoFocus
-                onClick={handleDeleteAll}
                 className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white transition hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-slate-800"
               >
                 Yes, delete all
               </button>
-            </div>
+            </form>
           </div>
         </div>
       )}

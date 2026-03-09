@@ -1,5 +1,5 @@
-import { Trash2, Pencil } from "lucide-react";
-import { useState } from "react";
+import { Trash2, Pencil, MoreVertical } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { Food } from "@/types";
 
 interface FoodItemProps {
@@ -11,40 +11,50 @@ interface FoodItemProps {
 export default function FoodItem({ food, onDelete, onEdit }: FoodItemProps) {
   const hasMacros = food.protein !== undefined || food.carbs !== undefined || food.fat !== undefined;
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <>
       {/* Confirmation Modal */}
       {confirmDelete && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          onKeyDown={(e) => { if (e.key === "Enter") { setConfirmDelete(false); onDelete!(food.id!); } if (e.key === "Escape") setConfirmDelete(false); }}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-80 rounded-2xl bg-slate-800 p-6 shadow-2xl ring-1 ring-slate-700">
             <h3 className="mb-1 text-base font-semibold text-slate-100">Delete food?</h3>
             <p className="mb-5 text-sm text-slate-400">
               <span className="font-medium text-slate-200">{food.name}</span> will be permanently removed from your database.
             </p>
-            <div className="flex gap-2">
+            <form onSubmit={(e) => { e.preventDefault(); setConfirmDelete(false); onDelete!(food.id!); }} className="flex gap-2">
               <button
+                type="button"
                 onClick={() => setConfirmDelete(false)}
                 className="flex-1 rounded-lg bg-slate-700 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-600"
               >
                 Cancel
               </button>
               <button
+                type="submit"
                 autoFocus
-                onClick={() => { setConfirmDelete(false); onDelete!(food.id!); }}
-                className="flex-1 rounded-lg bg-red-500/20 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-slate-800"
+                className="flex-1 rounded-lg bg-red-500/20 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-slate-800"
               >
                 Delete
               </button>
-            </div>
+            </form>
           </div>
         </div>
       )}
 
-    <div className="group flex items-center gap-3 rounded-xl bg-slate-800/70 px-3 py-2.5 ring-1 ring-slate-700/50 transition hover:bg-slate-800 hover:ring-slate-500">
+    <div className="group flex items-center gap-3 rounded-xl bg-slate-800/70 px-3 py-2.5 border-2 border-slate-700/60 transition hover:bg-slate-800 hover:border-slate-600">
       {/* Calorie badge */}
       <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-lg bg-green-500/10 ring-1 ring-green-500/20">
         <span className="text-xs font-bold leading-none text-green-400">{food.caloriesPerUnit}</span>
@@ -80,25 +90,40 @@ export default function FoodItem({ food, onDelete, onEdit }: FoodItemProps) {
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
-        {onEdit && food.id && (
+      {/* ⋮ dropdown menu */}
+      {(onEdit || onDelete) && food.id && (
+        <div ref={menuRef} className="relative shrink-0">
           <button
-            onClick={() => onEdit(food)}
-            className="rounded-md p-1.5 text-slate-600 transition hover:bg-blue-500/10 hover:text-blue-400"
+            onClick={() => setMenuOpen((o) => !o)}
+            className="rounded-lg p-1.5 text-slate-600 transition hover:bg-slate-700 hover:text-slate-300"
           >
-            <Pencil className="h-3.5 w-3.5" />
+            <MoreVertical className="h-4 w-4" />
           </button>
-        )}
-        {onDelete && food.id && (
-          <button
-            onClick={() => setConfirmDelete(true)}
-            className="rounded-md p-1.5 text-slate-600 transition hover:bg-red-500/10 hover:text-red-400"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
+
+          {menuOpen && (
+            <div className="absolute right-0 z-30 mt-1 w-36 overflow-hidden rounded-xl bg-slate-900 py-1 shadow-2xl ring-1 ring-slate-600">
+              {onEdit && (
+                <button
+                  onClick={() => { setMenuOpen(false); onEdit(food); }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-blue-400"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  onClick={() => { setMenuOpen(false); setConfirmDelete(true); }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-red-400"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
     </>
   );
