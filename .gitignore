@@ -75,14 +75,3 @@ next-env.d.ts
 .cache/
 coverage/
 .nyc_output/
-
-# ─── Next.js Turbopack ───────────────────────────────────────────────────────
-web/.next/cache/
-web/.next/dev/
-
-# ─── Testing ─────────────────────────────────────────────────────────────────
-playwright-report/
-test-results/
-
-# ─── Sentry (if added later) ─────────────────────────────────────────────────
-.sentryclirc
