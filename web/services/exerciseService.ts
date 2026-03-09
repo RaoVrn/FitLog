@@ -11,11 +11,13 @@ export async function addExerciseToTodayLog(
   const foods = existingLog?.foods ?? [];
   const exercises = [...(existingLog?.exercises ?? []), exercise];
   const foodCalories = foods.reduce((s, f) => s + f.totalCalories, 0);
+  const totalBurned = exercises.reduce((s, e) => s + (e.caloriesBurned || 0), 0);
 
   await saveLog(userId, {
     date: today,
     foods,
     exercises,
     totalCalories: foodCalories,
+    totalBurned,
   });
 }

@@ -1,8 +1,19 @@
+export interface UserProfile {
+  email: string;
+  calorieGoal: number;
+  weightGoal?: number;
+  displayName?: string;
+}
+
 export interface Food {
   id?: string;
+  userId?: string;
   name: string;
   caloriesPerUnit: number;
   unit?: string;
+  protein?: number;   // g per unit
+  carbs?: number;     // g per unit
+  fat?: number;       // g per unit
 }
 
 export interface FoodEntry {
@@ -10,6 +21,9 @@ export interface FoodEntry {
   foodName: string;
   quantity: number;
   totalCalories: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
 }
 
 export interface Exercise {
@@ -29,9 +43,30 @@ export interface DailyLog {
   exercises: Exercise[];
   totalCalories: number;
   totalBurned?: number;
+  netCalories?: number;
+  totalProtein?: number;
+  totalCarbs?: number;
+  totalFat?: number;
 }
 
 export interface WeeklyData {
   day: string;
+  date: string;
   calories: number;
+  burned: number;
+  net: number;
+}
+
+export interface WeightEntry {
+  id?: string;
+  userId?: string;
+  weight: number;
+  date: string;
+  note?: string;
+}
+
+export interface DailyMacros {
+  protein: number;
+  carbs: number;
+  fat: number;
 }

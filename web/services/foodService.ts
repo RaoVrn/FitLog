@@ -3,6 +3,7 @@ import {
   addDoc,
   getDocs,
   deleteDoc,
+  updateDoc,
   doc,
   query,
   orderBy,
@@ -42,6 +43,14 @@ export async function getFoods(userId: string): Promise<Food[]> {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Food));
+}
+
+export async function updateFood(
+  userId: string,
+  foodId: string,
+  updates: Partial<Omit<Food, "id">>
+): Promise<void> {
+  await updateDoc(doc(db, "users", userId, "foods", foodId), { ...updates });
 }
 
 export async function deleteFood(

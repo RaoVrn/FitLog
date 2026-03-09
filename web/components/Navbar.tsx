@@ -13,6 +13,7 @@ import {
   LogOut,
   User,
   ChevronDown,
+  Scale,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -21,6 +22,7 @@ const navLinks = [
   { href: "/foods",        label: "Foods",     icon: Utensils },
   { href: "/log/diet",     label: "Log Diet",  icon: PlusCircle },
   { href: "/log/exercise", label: "Exercise",  icon: Dumbbell },
+  { href: "/weight",       label: "Weight",    icon: Scale },
   { href: "/history",      label: "History",   icon: History },
 ];
 
