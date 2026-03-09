@@ -49,3 +49,28 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
+
+.food-list-scroll {
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+  padding: 4px 4px 4px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: #475569 transparent;
+}
+
+.food-list-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.food-list-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.food-list-scroll::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+.food-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}

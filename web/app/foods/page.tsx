@@ -5,8 +5,8 @@ import { Food } from "@/types";
 import FoodItem from "@/components/FoodItem";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
-import { getFoods, addFood, deleteFood, foodExists, updateFood } from "@/services/foodService";
-import { Plus, Search, Loader2, Pencil, X, Check } from "lucide-react";
+import { getFoods, addFood, deleteFood, deleteAllFoods, foodExists, updateFood } from "@/services/foodService";
+import { Plus, Search, Loader2, Pencil, X, Check, Flame, Trash2, Database } from "lucide-react";
 import { SkeletonList } from "@/components/Skeleton";
 import toast from "react-hot-toast";
 
@@ -44,6 +44,7 @@ function FoodsContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editState, setEditState] = useState<EditState | null>(null);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -76,7 +77,7 @@ function FoodsContent() {
       const newFood: Omit<Food, "id"> = {
         name: name.trim(),
         caloriesPerUnit: parseFloat(calories),
-        unit: unit.trim() || "unit",
+        unit: unit.trim() || "piece",
         protein: protein ? parseFloat(protein) : undefined,
         carbs: carbs ? parseFloat(carbs) : undefined,
         fat: fat ? parseFloat(fat) : undefined,
@@ -125,6 +126,18 @@ function FoodsContent() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (!user) return;
+    try {
+      await deleteAllFoods(user.uid);
+      setFoods([]);
+      setConfirmDeleteAll(false);
+      toast.success("All foods deleted.");
+    } catch {
+      toast.error("Failed to delete all foods.");
+    }
+  };
+
   const handleEditStart = (food: Food) => {
     setEditState({
       id: food.id!,
@@ -143,7 +156,7 @@ function FoodsContent() {
       const updates: Partial<Omit<Food, "id">> = {
         name: editState.name.trim(),
         caloriesPerUnit: parseFloat(editState.calories),
-        unit: editState.unit.trim() || "unit",
+        unit: editState.unit.trim() || "piece",
         protein: editState.protein ? parseFloat(editState.protein) : undefined,
         carbs: editState.carbs ? parseFloat(editState.carbs) : undefined,
         fat: editState.fat ? parseFloat(editState.fat) : undefined,
@@ -165,21 +178,33 @@ function FoodsContent() {
   );
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-100">Food Database</h1>
-        <p className="mt-1 text-slate-400">Manage your personal food items with calorie and macro info.</p>
+    <div className="mx-auto max-w-5xl space-y-3">
+
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-500/15 ring-1 ring-green-500/30">
+            <Database className="h-4 w-4 text-green-400" />
+          </div>
+          <div>
+            <h1 className="select-none text-xl font-bold text-slate-100">Food Database</h1>
+            <p className="text-xs text-slate-500">Manage your personal food library</p>
+          </div>
+        </div>
+        <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-400 ring-1 ring-slate-700">
+          {foods.length} {foods.length === 1 ? "food" : "foods"}
+        </span>
       </div>
 
-      {/* Quick Add */}
-      <div className="rounded-xl bg-slate-800 p-5 shadow-lg ring-1 ring-slate-700/50">
-        <h2 className="mb-3 text-sm font-semibold text-slate-400">Quick Add Common Foods</h2>
-        <div className="flex flex-wrap gap-2">
+      {/* ── Quick Add (full-width strip) ── */}
+      <div className="flex items-center gap-3 rounded-xl bg-slate-800/60 px-4 py-2.5 ring-1 ring-slate-700/50">
+        <span className="shrink-0 text-[11px] font-semibold uppercase tracking-widest text-slate-500">Quick Add</span>
+        <div className="flex flex-wrap gap-1.5">
           {QUICK_ADD_FOODS.map((f) => (
             <button
               key={f.name}
               onClick={() => handleQuickAdd(f)}
-              className="rounded-lg bg-slate-700 px-3 py-1.5 text-sm text-slate-300 ring-1 ring-slate-600 transition hover:bg-slate-600 hover:text-slate-100"
+              className="rounded-full border border-slate-600 bg-slate-700/70 px-3 py-1 text-xs text-slate-300 transition hover:border-green-500/60 hover:bg-green-500/10 hover:text-green-300"
             >
               {f.name}
             </button>
@@ -187,93 +212,234 @@ function FoodsContent() {
         </div>
       </div>
 
-      {/* Add food form */}
-      <div className="rounded-xl bg-slate-800 p-6 shadow-lg ring-1 ring-slate-700/50">
-        <h2 className="mb-4 font-semibold text-slate-200">Add New Food</h2>
-        <form onSubmit={handleAdd} className="space-y-3">
-          <div className="grid gap-3 sm:grid-cols-4">
-            <input type="text" placeholder="Food name" value={name} onChange={(e) => setName(e.target.value)}
-              className="col-span-2 rounded-lg bg-slate-700 px-4 py-2.5 text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-600 transition focus:ring-green-500" required />
-            <input type="number" placeholder="Calories per unit" value={calories} onChange={(e) => setCalories(e.target.value)}
-              className="rounded-lg bg-slate-700 px-4 py-2.5 text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-600 transition focus:ring-green-500" min="0" step="0.1" required />
-            <input type="text" placeholder="Unit (e.g. piece)" value={unit} onChange={(e) => setUnit(e.target.value)}
-              className="rounded-lg bg-slate-700 px-4 py-2.5 text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-600 transition focus:ring-green-500" />
+      {/* ── Main two-column layout ── */}
+      <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
+
+        {/* LEFT — Add / Edit form */}
+        <div>
+          {editState ? (
+            /* ── Edit panel ── */
+            <div className="rounded-xl bg-slate-800 p-5 shadow ring-1 ring-green-500/40">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-green-500/15">
+                    <Pencil className="h-3.5 w-3.5 text-green-400" />
+                  </span>
+                  Edit Food
+                </h2>
+                <button onClick={() => setEditState(null)} className="rounded-lg p-1 text-slate-500 transition hover:bg-slate-700 hover:text-slate-200">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <form
+                onSubmit={(e) => { e.preventDefault(); handleEditSave(); }}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleEditSave(); } }}
+                className="space-y-3"
+              >
+                <div>
+                  <label className="mb-1 block text-xs text-slate-500">Food name</label>
+                  <input
+                    type="text" value={editState.name}
+                    onChange={(e) => setEditState({ ...editState, name: e.target.value })}
+                    className="w-full rounded-lg bg-slate-700/80 px-3 py-2 text-sm text-slate-100 outline-none ring-1 ring-slate-600 transition focus:ring-green-500"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 block text-xs text-slate-500">Calories</label>
+                    <input
+                      type="number" value={editState.calories}
+                      onChange={(e) => setEditState({ ...editState, calories: e.target.value })}
+                      className="w-full rounded-lg bg-slate-700/80 px-3 py-2 text-sm text-slate-100 outline-none ring-1 ring-slate-600 transition focus:ring-green-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-slate-500">Unit</label>
+                    <input
+                      type="text" value={editState.unit}
+                      onChange={(e) => setEditState({ ...editState, unit: e.target.value })}
+                      className="w-full rounded-lg bg-slate-700/80 px-3 py-2 text-sm text-slate-100 outline-none ring-1 ring-slate-600 transition focus:ring-green-500"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="mb-1 block text-xs text-blue-400">Protein g</label>
+                    <input type="number" value={editState.protein}
+                      onChange={(e) => setEditState({ ...editState, protein: e.target.value })}
+                      className="w-full rounded-lg bg-slate-700/80 px-2 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-blue-400" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-yellow-400">Carbs g</label>
+                    <input type="number" value={editState.carbs}
+                      onChange={(e) => setEditState({ ...editState, carbs: e.target.value })}
+                      className="w-full rounded-lg bg-slate-700/80 px-2 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-yellow-400" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-pink-400">Fat g</label>
+                    <input type="number" value={editState.fat}
+                      onChange={(e) => setEditState({ ...editState, fat: e.target.value })}
+                      className="w-full rounded-lg bg-slate-700/80 px-2 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-pink-400" />
+                  </div>
+                </div>
+                <button type="submit"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 py-2 text-sm font-semibold text-slate-950 transition hover:bg-green-400">
+                  <Check className="h-3.5 w-3.5" /> Save Changes
+                </button>
+              </form>
+            </div>
+          ) : (
+            /* ── Add form ── */
+            <div className="rounded-xl bg-slate-800 p-5 shadow ring-1 ring-slate-700/50">
+              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-100">
+                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-green-500/15">
+                  <Plus className="h-3.5 w-3.5 text-green-400" />
+                </span>
+                Add New Food
+              </h2>
+              <form onSubmit={handleAdd} className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-xs text-slate-500">Food name *</label>
+                  <input
+                    type="text" placeholder="e.g. Brown Rice" value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full rounded-lg bg-slate-700/80 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-green-500"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 block text-xs text-slate-500">Calories *</label>
+                    <input
+                      type="number" placeholder="0" value={calories}
+                      onChange={(e) => setCalories(e.target.value)}
+                      className="w-full rounded-lg bg-slate-700/80 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-green-500"
+                      min="0" step="0.1" required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-slate-500">Unit</label>
+                    <input
+                      type="text" placeholder="piece / cup / 100g" value={unit}
+                      onChange={(e) => setUnit(e.target.value)}
+                      className="w-full rounded-lg bg-slate-700/80 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-green-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-slate-500">Macros <span className="text-slate-600">(optional)</span></label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <input type="number" placeholder="Protein g" value={protein}
+                      onChange={(e) => setProtein(e.target.value)}
+                      className="rounded-lg bg-slate-700/80 px-2 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-blue-400"
+                      min="0" step="0.1" />
+                    <input type="number" placeholder="Carbs g" value={carbs}
+                      onChange={(e) => setCarbs(e.target.value)}
+                      className="rounded-lg bg-slate-700/80 px-2 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-yellow-400"
+                      min="0" step="0.1" />
+                    <input type="number" placeholder="Fat g" value={fat}
+                      onChange={(e) => setFat(e.target.value)}
+                      className="rounded-lg bg-slate-700/80 px-2 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-pink-400"
+                      min="0" step="0.1" />
+                  </div>
+                </div>
+                <button type="submit" disabled={saving}
+                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-green-400 disabled:opacity-50">
+                  {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                  {saving ? "Saving..." : "Add Food"}
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT — Search + food list */}
+        <div className="flex flex-col gap-3">
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text" placeholder="Search foods..." value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-lg bg-slate-800 py-2.5 pl-9 pr-4 text-sm text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-700 transition focus:ring-green-500"
+            />
           </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <input type="number" placeholder="Protein (g)" value={protein} onChange={(e) => setProtein(e.target.value)}
-              className="rounded-lg bg-slate-700 px-4 py-2.5 text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-600 transition focus:ring-blue-400" min="0" step="0.1" />
-            <input type="number" placeholder="Carbs (g)" value={carbs} onChange={(e) => setCarbs(e.target.value)}
-              className="rounded-lg bg-slate-700 px-4 py-2.5 text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-600 transition focus:ring-yellow-400" min="0" step="0.1" />
-            <input type="number" placeholder="Fat (g)" value={fat} onChange={(e) => setFat(e.target.value)}
-              className="rounded-lg bg-slate-700 px-4 py-2.5 text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-600 transition focus:ring-pink-400" min="0" step="0.1" />
-          </div>
-          <button type="submit" disabled={saving}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 py-2.5 font-semibold text-slate-950 transition hover:bg-green-400 disabled:opacity-50">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            {saving ? "Saving..." : "Add Food"}
-          </button>
-        </form>
+
+          {/* Food count label + Delete All */}
+          {!loading && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-500">
+                Foods{" "}
+                <span className="rounded-full bg-slate-700 px-2 py-0.5 text-slate-300">
+                  {filtered.length}
+                </span>
+              </span>
+              {foods.length > 0 && (
+                <button
+                  onClick={() => setConfirmDeleteAll(true)}
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-slate-600 transition hover:bg-red-500/10 hover:text-red-400"
+                >
+                  <Trash2 className="h-3 w-3" /> Delete All
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Food list */}
+          {loading ? (
+            <SkeletonList rows={6} />
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-800/40 py-14 text-center ring-1 ring-slate-700/40">
+              <Flame className="mb-2 h-8 w-8 text-slate-700" />
+              <p className="text-sm text-slate-500">
+                {foods.length === 0 ? "No foods yet. Add your first food." : "No foods match your search."}
+              </p>
+            </div>
+          ) : (
+            <div className="food-list-scroll">
+              <div className="space-y-1.5">
+                {filtered.map((food) => (
+                  <FoodItem key={food.id} food={food} onDelete={handleDelete} onEdit={handleEditStart} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
       </div>
 
-      {/* Edit modal */}
-      {editState && (
-        <div className="rounded-xl bg-slate-800 p-6 shadow-lg ring-1 ring-green-500/50">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold text-slate-200 flex items-center gap-2">
-              <Pencil className="h-4 w-4 text-green-400" /> Edit Food
-            </h2>
-            <button onClick={() => setEditState(null)} className="rounded p-1 text-slate-500 hover:text-slate-200">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-4">
-              <input type="text" value={editState.name} onChange={(e) => setEditState({ ...editState, name: e.target.value })}
-                className="col-span-2 rounded-lg bg-slate-700 px-4 py-2.5 text-slate-100 outline-none ring-1 ring-slate-600 focus:ring-green-500" />
-              <input type="number" value={editState.calories} onChange={(e) => setEditState({ ...editState, calories: e.target.value })}
-                className="rounded-lg bg-slate-700 px-4 py-2.5 text-slate-100 outline-none ring-1 ring-slate-600 focus:ring-green-500" />
-              <input type="text" value={editState.unit} onChange={(e) => setEditState({ ...editState, unit: e.target.value })}
-                className="rounded-lg bg-slate-700 px-4 py-2.5 text-slate-100 outline-none ring-1 ring-slate-600 focus:ring-green-500" />
+      {/* ── Delete All Modal ── */}
+      {confirmDeleteAll && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onKeyDown={(e) => { if (e.key === "Enter") handleDeleteAll(); if (e.key === "Escape") setConfirmDeleteAll(false); }}
+        >
+          <div className="mx-4 w-full max-w-sm rounded-2xl bg-slate-800 p-6 shadow-2xl ring-1 ring-slate-700">
+            <div className="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/15">
+              <Trash2 className="h-5 w-5 text-red-400" />
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <input type="number" placeholder="Protein (g)" value={editState.protein} onChange={(e) => setEditState({ ...editState, protein: e.target.value })}
-                className="rounded-lg bg-slate-700 px-4 py-2.5 text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-600 focus:ring-blue-400" />
-              <input type="number" placeholder="Carbs (g)" value={editState.carbs} onChange={(e) => setEditState({ ...editState, carbs: e.target.value })}
-                className="rounded-lg bg-slate-700 px-4 py-2.5 text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-600 focus:ring-yellow-400" />
-              <input type="number" placeholder="Fat (g)" value={editState.fat} onChange={(e) => setEditState({ ...editState, fat: e.target.value })}
-                className="rounded-lg bg-slate-700 px-4 py-2.5 text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-600 focus:ring-pink-400" />
+            <h3 className="mt-4 text-lg font-semibold text-slate-100">Delete all foods?</h3>
+            <p className="mt-1.5 text-sm text-slate-400">
+              This will permanently delete all <span className="font-medium text-slate-200">{foods.length} foods</span> from your database. This action cannot be undone.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteAll(false)}
+                className="flex-1 rounded-xl border border-slate-600 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                autoFocus
+                onClick={handleDeleteAll}
+                className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white transition hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-slate-800"
+              >
+                Yes, delete all
+              </button>
             </div>
-            <button onClick={handleEditSave}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 py-2.5 font-semibold text-slate-950 transition hover:bg-green-400">
-              <Check className="h-4 w-4" /> Save Changes
-            </button>
           </div>
         </div>
       )}
-
-      {/* Search & list */}
-      <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-          <input type="text" placeholder="Search foods..." value={search} onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg bg-slate-800 py-2.5 pl-10 pr-4 text-slate-100 placeholder-slate-500 outline-none ring-1 ring-slate-700 transition focus:ring-green-500" />
-        </div>
-
-        {loading ? (
-          <SkeletonList rows={5} />
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((food) => (
-              <FoodItem key={food.id} food={food} onDelete={handleDelete} onEdit={handleEditStart} />
-            ))}
-            {filtered.length === 0 && (
-              <p className="col-span-full py-8 text-center text-slate-500">
-                {foods.length === 0 ? "No foods yet. Add your first food above!" : "No foods match your search."}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

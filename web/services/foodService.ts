@@ -12,6 +12,13 @@ import {
 import { db } from "@/lib/firebase";
 import { Food } from "@/types";
 
+/** Removes undefined fields so Firestore never receives them. */
+function sanitize<T extends object>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined)
+  ) as Partial<T>;
+}
+
 /** Returns true if a food with the same name (case-insensitive) already exists. */
 export async function foodExists(
   userId: string,
@@ -29,10 +36,10 @@ export async function addFood(
   userId: string,
   food: Omit<Food, "id">
 ): Promise<string> {
-  const ref = await addDoc(collection(db, "users", userId, "foods"), {
-    ...food,
-    name: food.name.trim(),
-  });
+  const ref = await addDoc(
+    collection(db, "users", userId, "foods"),
+    sanitize({ ...food, name: food.name.trim() })
+  );
   return ref.id;
 }
 
@@ -50,7 +57,7 @@ export async function updateFood(
   foodId: string,
   updates: Partial<Omit<Food, "id">>
 ): Promise<void> {
-  await updateDoc(doc(db, "users", userId, "foods", foodId), { ...updates });
+  await updateDoc(doc(db, "users", userId, "foods", foodId), sanitize(updates));
 }
 
 export async function deleteFood(
@@ -58,4 +65,9 @@ export async function deleteFood(
   foodId: string
 ): Promise<void> {
   await deleteDoc(doc(db, "users", userId, "foods", foodId));
+}
+
+export async function deleteAllFoods(userId: string): Promise<void> {
+  const snap = await getDocs(collection(db, "users", userId, "foods"));
+  await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
 }

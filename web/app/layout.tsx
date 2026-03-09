@@ -36,7 +36,7 @@ export default function RootLayout({
               error:   { iconTheme: { primary: "#f87171", secondary: "#0f172a" } },
             }}
           />
-          <main className="mx-auto max-w-6xl px-4 py-8">
+          <main className="mx-auto max-w-6xl px-4 py-4">
             {children}
           </main>
         </AuthProvider>
