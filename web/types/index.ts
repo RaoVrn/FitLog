@@ -1,6 +1,7 @@
 export interface UserProfile {
   email: string;
   calorieGoal: number;
+  calorieBurnGoal?: number;
   weightGoal?: number;
   displayName?: string;
 }

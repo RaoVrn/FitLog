@@ -47,10 +47,9 @@ next-env.d.ts
 # ─── Package manager artifacts ───────────────────────────────────────────────
 .pnpm-store/
 .npm/
-package-lock.json
+# NOTE: package-lock.json / yarn.lock / pnpm-lock.yaml should be committed
+# for reproducible installs. Do NOT add them here.
 pnpm-lock.yaml
-# Keep yarn.lock if using Yarn — remove the line below if so
-# yarn.lock
 
 # ─── Debug logs ──────────────────────────────────────────────────────────────
 npm-debug.log*
@@ -102,3 +101,10 @@ public/worker-*.js
 .turbo
 .cache/
 *.zip
+
+# ─── Next.js Turbopack ───────────────────────────────────────────────────────
+.next/cache/
+.next/dev/
+
+# ─── Sentry (if added later) ─────────────────────────────────────────────────
+.sentryclirc
