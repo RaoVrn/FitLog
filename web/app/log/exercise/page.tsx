@@ -32,16 +32,6 @@ const EXERCISE_TEMPLATES = [
 
 type ExerciseType = "sets-reps" | "duration";
 
-interface EditingExercise {
-  id: string;
-  name: string;
-  type: ExerciseType;
-  sets: string;
-  reps: string;
-  duration: string;
-  calories: string;
-}
-
 function LogExerciseContent() {
   const { user } = useAuth();
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -56,15 +46,14 @@ function LogExerciseContent() {
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [adding, setAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [savingEdit, setSavingEdit] = useState(false);
-  const [editing, setEditing] = useState<EditingExercise | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [search, setSearch] = useState("");
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [quickSearch, setQuickSearch] = useState("");
-  const [listOpen, setListOpen] = useState(false);
-  const [addFormOpen, setAddFormOpen] = useState(false);
+  const [listOpen, setListOpen] = useState(true);
+  const [addFormOpen, setAddFormOpen] = useState(true);
   const [burnGoal, setBurnGoal] = useState(500);
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalInput, setGoalInput] = useState("");
@@ -140,10 +129,42 @@ function LogExerciseContent() {
 
   const markSaved = () => setSavedAt(new Date());
 
-  // CREATE
+  const resetForm = () => {
+    setExerciseName(""); setCaloriesBurned(""); setSets("3"); setReps("10"); setDuration("30");
+    setEditingId(null);
+  };
+
+  // CREATE / UPDATE
   const handleAdd = async () => {
     if (!user || !exerciseName.trim()) return;
     const name = exerciseName.trim();
+
+    // UPDATE MODE
+    if (editingId) {
+      const updated: Exercise = {
+        id: editingId,
+        name,
+        caloriesBurned: caloriesBurned ? parseInt(caloriesBurned) : undefined,
+        ...(exerciseType === "sets-reps"
+          ? { sets: parseInt(sets) || 1, reps: parseInt(reps) || 1 }
+          : { duration: parseInt(duration) || 1 }),
+      };
+      setAdding(true); setSyncing(true);
+      try {
+        await updateExerciseInTodayLog(user.uid, updated);
+        setExercises((prev) => prev.map((e) => (e.id === editingId ? updated : e)));
+        markSaved();
+        toast.success(`${name} updated.`);
+        resetForm();
+      } catch {
+        toast.error("Failed to update exercise.");
+      } finally {
+        setAdding(false); setSyncing(false);
+      }
+      return;
+    }
+
+    // ADD MODE
     const existingIdx = exercises.findIndex(
       (e) => e.name.toLowerCase() === name.toLowerCase()
     );
@@ -188,7 +209,7 @@ function LogExerciseContent() {
         setExercises((prev) => [...prev, exercise]);
         toast.success(`${exercise.name} added.`);
       }
-      setExerciseName(""); setCaloriesBurned(""); setSets("3"); setReps("10"); setDuration("30");
+      resetForm();
       markSaved();
     } catch {
       toast.error("Failed to save exercise.");
@@ -231,40 +252,14 @@ function LogExerciseContent() {
   };
 
   const handleEditStart = (exercise: Exercise) => {
-    setEditing({
-      id: exercise.id!,
-      name: exercise.name,
-      type: exercise.duration ? "duration" : "sets-reps",
-      sets: String(exercise.sets ?? 3),
-      reps: String(exercise.reps ?? 10),
-      duration: String(exercise.duration ?? 30),
-      calories: String(exercise.caloriesBurned ?? ""),
-    });
-  };
-
-  // UPDATE
-  const handleEditSave = async () => {
-    if (!user || !editing) return;
-    const updated: Exercise = {
-      id: editing.id,
-      name: editing.name.trim(),
-      caloriesBurned: editing.calories ? parseInt(editing.calories) : undefined,
-      ...(editing.type === "sets-reps"
-        ? { sets: parseInt(editing.sets) || 1, reps: parseInt(editing.reps) || 1 }
-        : { duration: parseInt(editing.duration) || 1 }),
-    };
-    setSavingEdit(true); setSyncing(true);
-    try {
-      await updateExerciseInTodayLog(user.uid, updated);
-      setExercises((prev) => prev.map((e) => (e.id === editing.id ? updated : e)));
-      markSaved();
-      toast.success(`${updated.name} updated.`);
-      setEditing(null);
-    } catch {
-      toast.error("Failed to update exercise.");
-    } finally {
-      setSavingEdit(false); setSyncing(false);
-    }
+    setExerciseName(exercise.name);
+    setExerciseType(exercise.duration ? "duration" : "sets-reps");
+    setSets(String(exercise.sets ?? 3));
+    setReps(String(exercise.reps ?? 10));
+    setDuration(String(exercise.duration ?? 30));
+    setCaloriesBurned(String(exercise.caloriesBurned ?? ""));
+    setEditingId(exercise.id!);
+    setAddFormOpen(true);
   };
 
   const filtered = exercises.filter((e) =>
@@ -422,28 +417,27 @@ function LogExerciseContent() {
       </div>
 
       {/* -- Calories Burned Strip -- */}
-      <div className="flex items-center gap-3 rounded-xl bg-slate-800/60 px-4 py-2.5 ring-1 ring-slate-600">
-        {/* Left — total burned */}
-        <div className="shrink-0">
-          <span className="text-base font-bold text-slate-100">{totalCalsBurned}</span>
-          <span className="ml-1 text-[11px] text-slate-500">kcal burned</span>
-        </div>
-
-        {/* Center — progress bar */}
-        <div className="flex-1">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-700">
-            <div
-              className="h-2 rounded-full bg-orange-500 transition-all duration-700"
-              style={{ width: totalCalsBurned > 0 ? `${Math.min((totalCalsBurned / burnGoal) * 100, 100)}%` : "0%" }}
-            />
+      <div className="rounded-xl bg-slate-800/60 ring-1 ring-slate-600 overflow-hidden">
+        <div className="grid grid-cols-3 divide-x divide-slate-700/60">
+          <div className="flex flex-col items-center justify-center px-4 py-2">
+            <span className="text-base font-bold text-orange-400">{totalCalsBurned}</span>
+            <span className="text-[11px] text-slate-500">kcal burned</span>
           </div>
-        </div>
-
-        {/* Right — exercises count */}
-        <div className="flex shrink-0 items-center gap-2">
-          <div className="rounded-lg bg-slate-800 px-3 py-1.5 ring-1 ring-slate-600">
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Exercises</div>
-            <div className="text-sm font-bold text-blue-400">{exercises.length}</div>
+          <div className="flex flex-col justify-center px-4 py-2 gap-1">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-700">
+              <div
+                className={`h-2 rounded-full transition-all duration-700 ${totalCalsBurned >= burnGoal ? "bg-green-500" : "bg-orange-500"}`}
+                style={{ width: `${Math.min((totalCalsBurned / (burnGoal || 1)) * 100, 100)}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[11px] text-slate-600">
+              <span>{Math.round((totalCalsBurned / (burnGoal || 1)) * 100)}%</span>
+              <span>Goal: {burnGoal} kcal</span>
+            </div>
+          </div>
+          <div className="flex flex-col items-center justify-center px-4 py-2">
+            <span className="text-base font-bold text-blue-400">{exercises.length}</span>
+            <span className="text-[11px] text-slate-500">exercise{exercises.length !== 1 ? "s" : ""}</span>
           </div>
         </div>
       </div>
@@ -500,7 +494,7 @@ function LogExerciseContent() {
       </div>
 
       {/* -- Two-column layout -- */}
-      <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[400px_1fr]">
 
         {/* LEFT — Add exercise form */}
         <div className="rounded-xl bg-slate-800 ring-1 ring-slate-600 self-start overflow-hidden">
@@ -516,25 +510,25 @@ function LogExerciseContent() {
               <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-500/15">
                 <Plus className="h-3.5 w-3.5 text-blue-400" />
               </span>
-              Add an Exercise
+              {editingId ? "Edit Exercise" : "Add an Exercise"}
             </h2>
             <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${addFormOpen ? "rotate-180" : ""}`} />
           </div>
 
           {addFormOpen && (
-            <div className="border-t border-slate-700/50 p-5">
-          <form onSubmit={(e) => { e.preventDefault(); handleAdd(); }} className="space-y-3">
+            <div className="border-t border-slate-700/50 p-3">
+          <form onSubmit={(e) => { e.preventDefault(); handleAdd(); }} className="space-y-2">
             <input
               type="text"
               placeholder="Exercise name (e.g. Bench Press)"
               value={exerciseName}
               onChange={(e) => setExerciseName(e.target.value)}
-              className="w-full rounded-lg bg-slate-700/80 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-blue-500"
+              className="w-full rounded-lg bg-slate-700/80 px-3 py-1.5 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-blue-500"
             />
 
             {/* Type toggle */}
             <div>
-              <label className="mb-1 block text-xs text-slate-500">Type</label>
+              <label className="mb-0.5 block text-xs text-slate-500">Type</label>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -564,26 +558,26 @@ function LogExerciseContent() {
             {exerciseType === "sets-reps" ? (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs text-slate-500">Sets</label>
+                  <label className="mb-0.5 block text-xs text-slate-500">Sets</label>
                   <input type="number" value={sets} onChange={(e) => setSets(e.target.value)} min="1"
-                    className="w-full rounded-lg bg-slate-700/80 px-3 py-2 text-sm text-slate-100 outline-none ring-1 ring-slate-600 transition focus:ring-blue-500" />
+                    className="w-full rounded-lg bg-slate-700/80 px-3 py-1.5 text-sm text-slate-100 outline-none ring-1 ring-slate-600 transition focus:ring-blue-500" />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-slate-500">Reps</label>
+                  <label className="mb-0.5 block text-xs text-slate-500">Reps</label>
                   <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} min="1"
-                    className="w-full rounded-lg bg-slate-700/80 px-3 py-2 text-sm text-slate-100 outline-none ring-1 ring-slate-600 transition focus:ring-blue-500" />
+                    className="w-full rounded-lg bg-slate-700/80 px-3 py-1.5 text-sm text-slate-100 outline-none ring-1 ring-slate-600 transition focus:ring-blue-500" />
                 </div>
               </div>
             ) : (
               <div>
-                <label className="mb-1 block text-xs text-slate-500">Duration (minutes)</label>
+                <label className="mb-0.5 block text-xs text-slate-500">Duration (minutes)</label>
                 <input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} min="1"
-                  className="w-full rounded-lg bg-slate-700/80 px-3 py-2 text-sm text-slate-100 outline-none ring-1 ring-slate-600 transition focus:ring-blue-500" />
+                  className="w-full rounded-lg bg-slate-700/80 px-3 py-1.5 text-sm text-slate-100 outline-none ring-1 ring-slate-600 transition focus:ring-blue-500" />
               </div>
             )}
 
             <div>
-              <label className="mb-1 block text-xs text-slate-500">Calories burned (optional)</label>
+              <label className="mb-0.5 block text-xs text-slate-500">Calories burned (optional)</label>
               <div className="relative">
                 <Flame className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-orange-400" />
                 <input
@@ -592,14 +586,14 @@ function LogExerciseContent() {
                   value={caloriesBurned}
                   onChange={(e) => setCaloriesBurned(e.target.value)}
                   min="0"
-                  className="w-full rounded-lg bg-slate-700/80 py-2 pl-9 pr-3 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-blue-500"
+                  className="w-full rounded-lg bg-slate-700/80 py-1.5 pl-9 pr-3 text-sm text-slate-100 placeholder-slate-600 outline-none ring-1 ring-slate-600 transition focus:ring-blue-500"
                 />
               </div>
             </div>
 
             {/* Preview */}
             {exerciseName.trim() && (
-              <div className="flex items-center gap-2 rounded-lg bg-slate-700/40 px-3 py-2">
+              <div className="flex items-center gap-2 rounded-lg bg-slate-700/40 px-3 py-1.5">
                 <Dumbbell className="h-3.5 w-3.5 text-blue-400" />
                 <span className="text-xs text-slate-300">
                   <strong className="text-blue-400">{exerciseName}</strong>
@@ -611,14 +605,26 @@ function LogExerciseContent() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={!exerciseName.trim() || adding}
-              className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-              {adding ? "Saving..." : "Add Exercise"}
-            </button>
+            <div className="flex gap-2">
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="flex items-center justify-center gap-1.5 rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-600"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Cancel
+                </button>
+              )}
+              <button
+                type="submit"
+                disabled={!exerciseName.trim() || adding}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-500 py-2 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                {adding ? "Saving..." : editingId ? "Update Exercise" : "Add Exercise"}
+              </button>
+            </div>
           </form>
             </div>
           )}
@@ -693,68 +699,14 @@ function LogExerciseContent() {
                         No exercises match &ldquo;{search}&rdquo;
                       </div>
                     )}
-                    <div className="max-h-[420px] space-y-1.5 overflow-y-auto px-0.5 pb-0.5 [scrollbar-color:theme(colors.slate.600)_transparent] [scrollbar-width:thin]">
+                    <div className="max-h-[216px] space-y-1.5 overflow-y-auto px-0.5 pb-0.5 [scrollbar-color:theme(colors.slate.600)_transparent] [scrollbar-width:thin]">
                 {filtered.map((exercise) => (
                   <div
                     key={exercise.id}
-                    className="group flex items-center justify-between rounded-lg bg-slate-800 p-3 border-2 border-slate-700/60 transition hover:border-slate-600"
+                    className={`group flex items-center justify-between rounded-lg p-3 border transition hover:bg-slate-800 hover:border-slate-500 ${editingId === exercise.id ? "bg-blue-500/5 border-blue-500/30" : "bg-slate-800/80 border-slate-700/50"}`}
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-slate-100">{exercise.name}</p>
-                      {editing && editing.id === exercise.id ? (
-                        <div className="mt-1.5 space-y-2">
-                          <input
-                            type="text"
-                            value={editing!.name}
-                            onChange={(e) => setEditing({ ...editing!, name: e.target.value })}
-                            className="w-full rounded bg-slate-700 px-2 py-1 text-xs text-slate-100 outline-none ring-1 ring-blue-500"
-                            autoFocus
-                          />
-                          <div className="flex gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => setEditing({ ...editing!, type: "sets-reps" })}
-                              className={`rounded px-2 py-1 text-xs ${editing!.type === "sets-reps" ? "bg-blue-500 text-white" : "bg-slate-700 text-slate-400"}`}
-                            >
-                              Sets &amp; Reps
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEditing({ ...editing!, type: "duration" })}
-                              className={`rounded px-2 py-1 text-xs ${editing!.type === "duration" ? "bg-blue-500 text-white" : "bg-slate-700 text-slate-400"}`}
-                            >
-                              Duration
-                            </button>
-                          </div>
-                          {editing!.type === "sets-reps" ? (
-                            <div className="flex gap-2">
-                              <input type="number" value={editing!.sets} onChange={(e) => setEditing({ ...editing!, sets: e.target.value })}
-                                placeholder="Sets" className="w-16 rounded bg-slate-700 px-2 py-1 text-xs text-slate-100 outline-none ring-1 ring-slate-600" />
-                              <input type="number" value={editing!.reps} onChange={(e) => setEditing({ ...editing!, reps: e.target.value })}
-                                placeholder="Reps" className="w-16 rounded bg-slate-700 px-2 py-1 text-xs text-slate-100 outline-none ring-1 ring-slate-600" />
-                            </div>
-                          ) : (
-                            <input type="number" value={editing!.duration} onChange={(e) => setEditing({ ...editing!, duration: e.target.value })}
-                              placeholder="Duration (min)" className="w-28 rounded bg-slate-700 px-2 py-1 text-xs text-slate-100 outline-none ring-1 ring-slate-600" />
-                          )}
-                          <div className="relative">
-                            <Flame className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-orange-400" />
-                            <input type="number" value={editing!.calories} onChange={(e) => setEditing({ ...editing!, calories: e.target.value })}
-                              placeholder="Calories" className="w-28 rounded bg-slate-700 py-1 pl-6 pr-2 text-xs text-slate-100 outline-none ring-1 ring-slate-600" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <button onClick={handleEditSave} disabled={savingEdit}
-                              className="flex items-center gap-1 rounded bg-blue-500 px-2 py-1 text-xs text-white hover:bg-blue-400 disabled:opacity-60">
-                              {savingEdit ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                              Save
-                            </button>
-                            <button onClick={() => setEditing(null)}
-                              className="rounded bg-slate-700 px-2 py-1 text-xs text-slate-400 hover:bg-slate-600">
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
                         <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                           {exercise.sets && exercise.reps && (
                             <span className="flex items-center gap-1 text-xs text-slate-400">
@@ -769,23 +721,20 @@ function LogExerciseContent() {
                             </span>
                           )}
                           {exercise.caloriesBurned && (
-                            <span className="rounded-full bg-orange-500/10 px-1.5 py-0.5 text-[11px] text-orange-400">
+                            <span className="rounded-full bg-orange-500/10 px-2 py-0.5 text-[11px] font-semibold text-orange-400 ring-1 ring-orange-500/20">
                               -{exercise.caloriesBurned} kcal
                             </span>
                           )}
                         </div>
-                      )}
                     </div>
 
                     <div className="ml-2 flex shrink-0 items-center gap-1">
-                      {editing?.id !== exercise.id && (
-                        <button
-                          onClick={() => handleEditStart(exercise)}
-                          className="rounded-lg p-1.5 text-slate-600 opacity-0 transition group-hover:opacity-100 hover:bg-blue-500/10 hover:text-blue-400"
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleEditStart(exercise)}
+                        className={`rounded-lg p-1.5 transition opacity-0 group-hover:opacity-100 hover:bg-blue-500/10 hover:text-blue-400 ${editingId === exercise.id ? "!opacity-100 text-blue-400" : "text-slate-600"}`}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
                       <button
                         onClick={() => setConfirmDelete(exercise.id!)}
                         disabled={deletingId === exercise.id}
@@ -805,27 +754,62 @@ function LogExerciseContent() {
             )}
           </div>
 
-          {/* Workout Summary */}
-          {totalCalsBurned > 0 && (
-            <div className="rounded-xl bg-slate-800 p-4 ring-1 ring-slate-700/50">
-              <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-slate-500">
-                <Flame className="h-3.5 w-3.5 text-orange-400" />
-                Workout Summary
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg bg-slate-700/50 p-3 text-center">
-                  <div className="text-lg font-bold text-orange-400">{totalCalsBurned}</div>
-                  <div className="text-xs text-slate-500">kcal burned</div>
-                </div>
-                <div className="rounded-lg bg-slate-700/50 p-3 text-center">
-                  <div className="text-lg font-bold text-blue-400">{exercises.length}</div>
-                  <div className="text-xs text-slate-500">exercise{exercises.length !== 1 ? "s" : ""}</div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
+      </div>
+
+      {/* ── Workout Summary ── */}
+      <div className="rounded-xl bg-slate-800 ring-1 ring-slate-700/50 overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50">
+          <div className="flex items-center gap-2">
+            <Flame className="h-3.5 w-3.5 text-orange-400" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Workout Summary</span>
+          </div>
+          {totalCalsBurned >= burnGoal && burnGoal > 0 ? (
+            <span className="rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-semibold text-green-400 ring-1 ring-green-500/25">🎯 Goal reached!</span>
+          ) : (
+            <span className="text-xs font-medium text-slate-400">{burnGoal - totalCalsBurned} kcal to goal</span>
+          )}
+        </div>
+        <div className="grid grid-cols-3 divide-x divide-slate-700/50">
+          <div className="p-4 text-center">
+            <div className="text-2xl font-bold text-orange-400">{totalCalsBurned}</div>
+            <div className="mt-0.5 text-xs text-slate-500">kcal burned</div>
+            <div className="mt-2 h-2 w-full rounded-full bg-slate-700">
+              <div
+                className="h-2 rounded-full transition-all duration-700"
+                style={{
+                  width: `${Math.min((totalCalsBurned / (burnGoal || 1)) * 100, 100)}%`,
+                  background: totalCalsBurned >= burnGoal
+                    ? "linear-gradient(to right, #4ade80, #22c55e)"
+                    : "linear-gradient(to right, #fb923c, #f97316)"
+                }}
+              />
+            </div>
+            <div className="mt-1 text-xs text-slate-400">{Math.round((totalCalsBurned / (burnGoal || 1)) * 100)}% of {burnGoal} goal</div>
+          </div>
+          <div className="p-4 text-center">
+            <div className="text-2xl font-bold text-blue-400">{exercises.length}</div>
+            <div className="mt-0.5 text-xs text-slate-500">exercise{exercises.length !== 1 ? "s" : ""}</div>
+            <div className="mt-2 text-xs text-slate-400">
+              {exercises.length > 0 ? `~${Math.round(totalCalsBurned / exercises.length)} kcal avg` : "no exercises yet"}
+            </div>
+          </div>
+          <div className="p-4 text-center">
+            {totalCalsBurned >= burnGoal ? (
+              <>
+                <div className="text-2xl font-bold text-green-400">+{totalCalsBurned - burnGoal}</div>
+                <div className="mt-0.5 text-xs text-green-600">over goal</div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-slate-300">{burnGoal - totalCalsBurned}</div>
+                <div className="mt-0.5 text-xs text-slate-500">kcal remaining</div>
+              </>
+            )}
+            <div className="mt-2 text-xs text-slate-400">Goal: {burnGoal} kcal</div>
+          </div>
+        </div>
       </div>
     </div>
   );

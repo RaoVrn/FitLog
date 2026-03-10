@@ -115,20 +115,15 @@ public/worker-*.js
 # ─── Storybook ───────────────────────────────────────────────────────────────
 storybook-static/
 
-# ─── Next.js Turbopack lock ──────────────────────────────────────────────────
-.next/dev/lock
-*.pem
-*.tgz
-*.zip
+# ─── Bundle analyzer ─────────────────────────────────────────────────────────
+.next/analyze/
+
+# ─── Vercel ──────────────────────────────────────────────────────────────────
 .vercel
-.cache/
-.turbo
-.cache/
-*.zip
 
-# ─── Next.js Turbopack ───────────────────────────────────────────────────────
-.next/cache/
-.next/dev/
+# ─── Prisma ──────────────────────────────────────────────────────────────────
+# prisma/migrations/ (uncomment if you don't want to track migrations)
 
-# ─── Sentry (if added later) ─────────────────────────────────────────────────
-.sentryclirc
+# ─── Local https certs (mkcert etc.) ─────────────────────────────────────────
+localhost.pem
+localhost-key.pem

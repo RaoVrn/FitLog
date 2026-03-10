@@ -99,6 +99,19 @@ web/public/worker-*.js
 .sentryclirc
 
 # ─── Storybook ───────────────────────────────────────────────────────────────
+web/storybook-static/
+
+# ─── Bundle analyzer ─────────────────────────────────────────────────────────
+web/.next/analyze/
+
+# ─── Local https certs (mkcert etc.) ─────────────────────────────────────────
+localhost.pem
+localhost-key.pem
+
+# ─── Optional: lock files from sub-packages ──────────────────────────────────
+# web/package-lock.json  (uncomment if you manage installs from root only)
+
+# ─── Storybook ───────────────────────────────────────────────────────────────
 storybook-static/
 
 # ─── Next.js Turbopack lock ──────────────────────────────────────────────────
