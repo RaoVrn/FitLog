@@ -319,7 +319,7 @@ function LogDietContent() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           {syncing && (
             <span className="flex items-center gap-1 text-xs text-slate-500">
               <Loader2 className="h-3 w-3 animate-spin" /> Saving…
@@ -330,6 +330,35 @@ function LogDietContent() {
               <CheckCircle className="h-3 w-3" />
               Saved
             </span>
+          )}
+          {/* Set calorie goal */}
+          {editingGoal ? (
+            <>
+              <input
+                autoFocus
+                type="number"
+                value={goalInput}
+                onChange={(e) => setGoalInput(e.target.value)}
+                className="w-24 rounded-lg bg-slate-700 px-3 py-1.5 text-sm text-slate-100 outline-none ring-1 ring-green-500"
+                placeholder="kcal"
+                onKeyDown={(e) => { if (e.key === "Enter") handleSaveGoal(); if (e.key === "Escape") setEditingGoal(false); }}
+              />
+              <button onClick={handleSaveGoal} disabled={savingGoal} className="rounded-lg p-1.5 text-green-400 hover:bg-green-500/10">
+                {savingGoal ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+              </button>
+              <button onClick={() => setEditingGoal(false)} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-700">
+                <X className="h-3 w-3" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => { setGoalInput(String(calorieGoal)); setEditingGoal(true); }}
+              className="flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-300 ring-1 ring-green-500/40 transition hover:ring-green-500 hover:text-white"
+            >
+              <Utensils className="h-3.5 w-3.5 text-green-400" />
+              {calorieGoal ? `Goal: ${calorieGoal} kcal` : "Set calorie goal"}
+              <Pencil className="h-3 w-3 text-green-400" />
+            </button>
           )}
         </div>
       </div>
@@ -360,45 +389,6 @@ function LogDietContent() {
           ) : (
             <span className="text-sm font-semibold text-green-400">{remaining} left</span>
           )}
-        </div>
-
-        {/* Calorie Goal card */}
-        <div className="shrink-0 rounded-lg bg-slate-800 px-3 py-1.5 ring-1 ring-slate-600 text-right">
-          <div className="flex items-center gap-1.5">
-            <div>
-              <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Calorie Goal</div>
-              {editingGoal ? (
-                <div className="mt-0.5 flex items-center gap-1">
-                  <input
-                    type="number"
-                    value={goalInput}
-                    onChange={(e) => setGoalInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleSaveGoal(); if (e.key === "Escape") setEditingGoal(false); }}
-                    className="w-16 rounded bg-slate-700 px-1.5 py-0.5 text-sm font-bold text-green-400 outline-none ring-1 ring-green-500"
-                    autoFocus
-                  />
-                  <button type="button" onClick={handleSaveGoal} disabled={savingGoal} className="rounded p-0.5 text-green-400 hover:bg-green-500/10">
-                    {savingGoal ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                  </button>
-                  <button type="button" onClick={() => setEditingGoal(false)} className="rounded p-0.5 text-slate-500 hover:bg-slate-700">
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1">
-                  <span className="text-base font-bold text-green-400">{calorieGoal}</span>
-                  <span className="text-[10px] text-slate-500">kcal</span>
-                  <button
-                    type="button"
-                    onClick={() => { setGoalInput(String(calorieGoal)); setEditingGoal(true); }}
-                    className="rounded p-0.5 text-slate-600 transition hover:text-slate-400"
-                  >
-                    <Pencil className="h-2.5 w-2.5" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
 

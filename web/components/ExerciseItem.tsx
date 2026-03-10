@@ -10,7 +10,7 @@ interface ExerciseItemProps {
 
 export default function ExerciseItem({ exercise, onDelete, onEdit, deleting }: ExerciseItemProps) {
   return (
-    <div className="group flex items-center justify-between rounded-lg bg-slate-800/80 p-3 border-2 border-slate-700/60 transition hover:bg-slate-800 hover:border-slate-600">
+    <div className="group flex items-center justify-between rounded-lg bg-slate-800/80 p-3 border-2 border-slate-700/60 transition hover:bg-slate-800 hover:border-slate-400">
       {/* Left: icon + info */}
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">

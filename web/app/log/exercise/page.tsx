@@ -378,7 +378,7 @@ function LogExerciseContent() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           {syncing && (
             <span className="flex items-center gap-1 text-xs text-slate-500">
               <Loader2 className="h-3 w-3 animate-spin" /> Saving...
@@ -388,6 +388,35 @@ function LogExerciseContent() {
             <span className="flex items-center gap-1 text-xs text-green-500">
               <CheckCircle className="h-3 w-3" /> Saved
             </span>
+          )}
+          {/* Set burn goal */}
+          {editingGoal ? (
+            <>
+              <input
+                autoFocus
+                type="number"
+                value={goalInput}
+                onChange={(e) => setGoalInput(e.target.value)}
+                className="w-24 rounded-lg bg-slate-700 px-3 py-1.5 text-sm text-slate-100 outline-none ring-1 ring-orange-500"
+                placeholder="kcal"
+                onKeyDown={(e) => { if (e.key === "Enter") handleSaveGoal(); if (e.key === "Escape") setEditingGoal(false); }}
+              />
+              <button onClick={handleSaveGoal} disabled={savingGoal} className="rounded-lg p-1.5 text-orange-400 hover:bg-orange-500/10">
+                {savingGoal ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+              </button>
+              <button onClick={() => setEditingGoal(false)} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-700">
+                <X className="h-3 w-3" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => { setGoalInput(burnGoal.toString()); setEditingGoal(true); }}
+              className="flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-300 ring-1 ring-orange-500/40 transition hover:ring-orange-500 hover:text-white"
+            >
+              <Flame className="h-3.5 w-3.5 text-orange-400" />
+              {burnGoal ? `Goal: ${burnGoal} kcal` : "Set burn goal"}
+              <Pencil className="h-3 w-3 text-orange-400" />
+            </button>
           )}
         </div>
       </div>
@@ -410,45 +439,8 @@ function LogExerciseContent() {
           </div>
         </div>
 
-        {/* Right — goal + exercises */}
+        {/* Right — exercises count */}
         <div className="flex shrink-0 items-center gap-2">
-          {/* Goal card */}
-          {editingGoal ? (
-            <div className="flex items-center gap-1.5 rounded-lg bg-slate-800 px-2.5 py-1.5 ring-1 ring-blue-500/60">
-              <input
-                autoFocus
-                type="number"
-                value={goalInput}
-                onChange={(e) => setGoalInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handleSaveGoal(); if (e.key === "Escape") setEditingGoal(false); }}
-                className="w-14 bg-transparent text-sm font-bold text-slate-100 outline-none"
-              />
-              <span className="text-xs text-slate-400">kcal</span>
-              <button onClick={handleSaveGoal} disabled={savingGoal} className="rounded bg-green-500/20 p-0.5 text-green-400 hover:bg-green-500/30">
-                {savingGoal ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-              </button>
-              <button onClick={() => setEditingGoal(false)} className="rounded bg-slate-700 p-0.5 text-slate-400 hover:text-slate-200">
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => { setGoalInput(burnGoal.toString()); setEditingGoal(true); }}
-              className="group flex items-center gap-2 rounded-lg bg-slate-800 px-3 py-1.5 ring-1 ring-slate-600 transition hover:ring-orange-500/60"
-              title="Click to edit burn goal"
-            >
-              <div className="text-left">
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Burn Goal</div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-sm font-bold text-orange-400">{burnGoal}</span>
-                  <span className="text-[11px] text-slate-500">kcal</span>
-                </div>
-              </div>
-              <Pencil className="h-3 w-3 text-slate-600 transition group-hover:text-orange-400" />
-            </button>
-          )}
-
-          {/* Exercises card */}
           <div className="rounded-lg bg-slate-800 px-3 py-1.5 ring-1 ring-slate-600">
             <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Exercises</div>
             <div className="text-sm font-bold text-blue-400">{exercises.length}</div>
