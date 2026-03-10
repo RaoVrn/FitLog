@@ -63,7 +63,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     setDropdownOpen(false);
     await logout();
-    router.push("/login");
+    router.push("/");
   };
 
   const Logo = (
