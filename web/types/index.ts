@@ -1,9 +1,16 @@
+export type Gender = "male" | "female" | "other";
+export type ActivityLevel = "sedentary" | "light" | "moderate" | "active" | "very_active";
+
 export interface UserProfile {
   email: string;
   calorieGoal: number;
   calorieBurnGoal?: number;
   weightGoal?: number;
   displayName?: string;
+  age?: number;
+  heightCm?: number;
+  gender?: Gender;
+  activityLevel?: ActivityLevel;
 }
 
 export interface Food {

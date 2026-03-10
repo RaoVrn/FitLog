@@ -8,6 +8,7 @@ import {
   query,
   orderBy,
   limit,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { WeightEntry } from "@/types";
@@ -59,4 +60,25 @@ export async function updateWeight(
     doc(db, "users", userId, "weights", entryId),
     clean(fields as Record<string, unknown>)
   );
+}
+
+/** Returns the most-recently dated weight entry, or null if none. */
+export async function getLatestWeight(
+  userId: string
+): Promise<WeightEntry | null> {
+  const q = query(
+    collection(db, "users", userId, "weights"),
+    orderBy("date", "desc"),
+    limit(1)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  return { id: d.id, ...d.data() } as WeightEntry;
+}
+
+/** Returns the total number of weight entries logged. */
+export async function getWeightCount(userId: string): Promise<number> {
+  const snap = await getDocs(collection(db, "users", userId, "weights"));
+  return snap.size;
 }

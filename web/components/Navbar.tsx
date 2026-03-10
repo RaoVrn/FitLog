@@ -171,7 +171,7 @@ export default function Navbar() {
                     <p className="truncate text-xs text-slate-500">{user.email}</p>
                   </div>
                   <Link
-                    href="/dashboard"
+                    href="/profile"
                     onClick={() => setDropdownOpen(false)}
                     className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-slate-700 hover:text-slate-100"
                   >
