@@ -99,6 +99,25 @@ public/worker-*.js
 
 # ─── Misc ────────────────────────────────────────────────────────────────────
 *.pem
+*.key
+*.cert
+*.tgz
+*.zip
+.vercel
+.netlify
+.cache/
+.parcel-cache/
+.swc/
+
+# ─── Sentry ──────────────────────────────────────────────────────────────────
+.sentryclirc
+
+# ─── Storybook ───────────────────────────────────────────────────────────────
+storybook-static/
+
+# ─── Next.js Turbopack lock ──────────────────────────────────────────────────
+.next/dev/lock
+*.pem
 *.tgz
 *.zip
 .vercel
