@@ -66,6 +66,22 @@ $RECYCLE.BIN/
 *.tsbuildinfo
 next-env.d.ts
 
+# ─── Linting & formatting cache ──────────────────────────────────────────────
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# ─── Testing ─────────────────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# ─── PWA / service worker ────────────────────────────────────────────────────
+web/public/sw.js
+web/public/workbox-*.js
+web/public/worker-*.js
+
 # ─── Misc ────────────────────────────────────────────────────────────────────
 *.pem
 *.tgz
@@ -73,5 +89,3 @@ next-env.d.ts
 .vercel
 .turbo
 .cache/
-coverage/
-.nyc_output/
