@@ -147,16 +147,17 @@ export default function Navbar() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-xl bg-slate-800 px-3 py-2 ring-1 ring-slate-700 transition hover:bg-slate-700"
+                className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-all ${
+                  dropdownOpen
+                    ? "border-slate-600 bg-slate-800 text-slate-100"
+                    : "border-slate-700/60 bg-slate-800/50 text-slate-400 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100"
+                }`}
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-500/20 text-xs font-bold text-green-400">
-                  {getInitials(user)}
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500/20 ring-1 ring-green-500/40">
+                  <User className="h-3 w-3 text-green-400" />
                 </div>
-                <span className="hidden max-w-[120px] truncate text-xs text-slate-300 md:block">
-                  {user.displayName || user.email}
-                </span>
                 <ChevronDown
-                  className={`h-3.5 w-3.5 text-slate-500 transition-transform ${
+                  className={`h-3.5 w-3.5 transition-transform ${
                     dropdownOpen ? "rotate-180" : ""
                   }`}
                 />

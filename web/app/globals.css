@@ -50,6 +50,16 @@ body {
   background: #475569;
 }
 
+/* ── Homepage utilities ───────────────────────── */
+.hero-green {
+  color: #4ade80;
+  text-shadow: 0 0 60px rgba(74, 222, 128, 0.35), 0 0 120px rgba(74, 222, 128, 0.12);
+}
+
+.cta-card {
+  background: linear-gradient(135deg, rgba(34,197,94,0.25) 0%, rgba(51,65,85,0.4) 40%, rgba(51,65,85,0.4) 60%, rgba(16,185,129,0.15) 100%);
+}
+
 .food-list-scroll {
   max-height: 370px;
   overflow-y: auto;

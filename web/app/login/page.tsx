@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Activity, Mail, Lock, Loader2, Chrome } from "lucide-react";
+import { Activity, Mail, Lock, Loader2, Chrome, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
@@ -62,7 +62,16 @@ export default function LoginPage() {
   if (loading) return null;
 
   return (
-    <div className="flex min-h-[80vh] items-center justify-center">
+    <div className="relative flex min-h-[80vh] items-center justify-center">
+      {/* Back button — fixed top-left */}
+      <Link
+        href="/"
+        className="absolute left-0 top-0 inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-300"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </Link>
+
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center text-center">

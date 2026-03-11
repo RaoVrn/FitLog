@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Activity, Mail, Lock, Loader2, Chrome, Eye, EyeOff } from "lucide-react";
+import { Activity, Mail, Lock, Loader2, Chrome, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -111,32 +111,41 @@ export default function SignupPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-[80vh] items-center justify-center">
+    <div className="relative flex min-h-[90vh] items-center justify-center py-4">
+      {/* Back button — fixed top-left */}
+      <Link
+        href="/"
+        className="absolute left-0 top-0 inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-300"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </Link>
+
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-500/10 ring-1 ring-green-500/20">
-            <Activity className="h-7 w-7 text-green-400" />
+        <div className="mb-4 flex flex-col items-center text-center">
+          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 ring-1 ring-green-500/20">
+            <Activity className="h-5 w-5 text-green-400" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-100">
+          <h1 className="text-xl font-bold text-slate-100">
             Create your <span className="text-green-400">FitLog</span> account
           </h1>
-          <p className="mt-1 text-sm text-slate-500">Start tracking your fitness journey today</p>
+          <p className="mt-0.5 text-sm text-slate-500">Start tracking your fitness journey today</p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl bg-slate-800 p-8 shadow-xl ring-1 ring-slate-700/50">
+        <div className="rounded-2xl bg-slate-800 p-6 shadow-xl ring-1 ring-slate-700/50">
           {/* Google */}
           <button
             onClick={handleGoogle}
             disabled={busy}
-            className="mb-6 flex w-full items-center justify-center gap-3 rounded-xl bg-slate-700 py-3 font-medium text-slate-200 ring-1 ring-slate-600 transition hover:bg-slate-600 disabled:opacity-50"
+            className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl bg-slate-700 py-2.5 font-medium text-slate-200 ring-1 ring-slate-600 transition hover:bg-slate-600 disabled:opacity-50"
           >
             {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Chrome className="h-4 w-4" />}
             Continue with Google
           </button>
 
-          <div className="relative mb-6">
+          <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-700" />
             </div>
@@ -147,16 +156,16 @@ export default function SignupPage() {
 
           {/* Firebase error */}
           {error && (
-            <div className="mb-4 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400 ring-1 ring-red-500/20">
+            <div className="mb-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400 ring-1 ring-red-500/20">
               {error}
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSignup} noValidate className="space-y-4">
+          <form onSubmit={handleSignup} noValidate className="space-y-3">
             {/* Email */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-400">Email</label>
+              <label className="mb-1 block text-xs font-medium text-slate-400">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                 <input
@@ -166,17 +175,17 @@ export default function SignupPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={() => handleBlur("email")}
                   placeholder="you@example.com"
-                  className={`w-full rounded-lg bg-slate-700 py-2.5 pl-10 pr-4 text-slate-100 placeholder-slate-500 outline-none ring-1 transition focus:ring-green-500 ${
+                  className={`w-full rounded-lg bg-slate-700 py-2 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-500 outline-none ring-1 transition focus:ring-green-500 ${
                     emailError ? "ring-red-500" : "ring-slate-600"
                   }`}
                 />
               </div>
-              {emailError && <p className="mt-1 text-xs text-red-400">{emailError}</p>}
+              {emailError && <p className="mt-0.5 text-xs text-red-400">{emailError}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-400">Password</label>
+              <label className="mb-1 block text-xs font-medium text-slate-400">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                 <input
@@ -185,7 +194,7 @@ export default function SignupPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() => handleBlur("password")}
                   placeholder="Min. 6 characters"
-                  className={`w-full rounded-lg bg-slate-700 py-2.5 pl-10 pr-10 text-slate-100 placeholder-slate-500 outline-none ring-1 transition focus:ring-green-500 ${
+                  className={`w-full rounded-lg bg-slate-700 py-2 pl-10 pr-10 text-sm text-slate-100 placeholder-slate-500 outline-none ring-1 transition focus:ring-green-500 ${
                     passwordError ? "ring-red-500" : "ring-slate-600"
                   }`}
                 />
@@ -199,31 +208,23 @@ export default function SignupPage() {
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-
               {/* Strength indicator */}
               {password.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  <div className="h-1 w-full overflow-hidden rounded-full bg-slate-700">
-                    <div
-                      className={`h-full rounded-full transition-all duration-300 ${strength.color} ${strength.width}`}
-                    />
+                <div className="mt-1.5 flex items-center gap-2">
+                  <div className="h-1 flex-1 overflow-hidden rounded-full bg-slate-700">
+                    <div className={`h-full rounded-full transition-all duration-300 ${strength.color} ${strength.width}`} />
                   </div>
-                  <p className={`text-xs font-medium ${
-                    strength.label === "Weak"   ? "text-red-400"    :
-                    strength.label === "Medium" ? "text-yellow-400" : "text-green-400"
-                  }`}>
-                    {strength.label}
-                  </p>
+                  <span className={`text-xs font-medium ${
+                    strength.label === "Weak" ? "text-red-400" : strength.label === "Medium" ? "text-yellow-400" : "text-green-400"
+                  }`}>{strength.label}</span>
                 </div>
               )}
-              {passwordError && <p className="mt-1 text-xs text-red-400">{passwordError}</p>}
+              {passwordError && <p className="mt-0.5 text-xs text-red-400">{passwordError}</p>}
             </div>
 
             {/* Confirm password */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-400">
-                Confirm Password
-              </label>
+              <label className="mb-1 block text-xs font-medium text-slate-400">Confirm Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                 <input
@@ -232,7 +233,7 @@ export default function SignupPage() {
                   onChange={(e) => setConfirm(e.target.value)}
                   onBlur={() => handleBlur("confirm")}
                   placeholder="Repeat password"
-                  className={`w-full rounded-lg bg-slate-700 py-2.5 pl-10 pr-10 text-slate-100 placeholder-slate-500 outline-none ring-1 transition focus:ring-green-500 ${
+                  className={`w-full rounded-lg bg-slate-700 py-2 pl-10 pr-10 text-sm text-slate-100 placeholder-slate-500 outline-none ring-1 transition focus:ring-green-500 ${
                     confirmError ? "ring-red-500" : "ring-slate-600"
                   }`}
                 />
@@ -246,20 +247,20 @@ export default function SignupPage() {
                   {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {confirmError && <p className="mt-1 text-xs text-red-400">{confirmError}</p>}
+              {confirmError && <p className="mt-0.5 text-xs text-red-400">{confirmError}</p>}
             </div>
 
             <button
               type="submit"
               disabled={busy}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-green-500 py-3 font-semibold text-slate-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-500 py-2.5 font-semibold text-slate-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {submitting ? "Creating account..." : "Create Account"}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
+          <p className="mt-4 text-center text-sm text-slate-500">
             Already have an account?{" "}
             <Link href="/login" className="font-medium text-green-400 hover:text-green-300">
               Sign in
