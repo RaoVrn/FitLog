@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
   Utensils, UtensilsCrossed, Plus, Trash2, Loader2, CheckCircle,
-  Pencil, Check, X, Search, ChevronDown, SlidersHorizontal,
+  Pencil, Check, X, Search, ChevronDown, SlidersHorizontal, Star,
 } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
@@ -90,6 +90,25 @@ function LogDietContent() {
       f.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [foods, searchQuery]);
+
+  const favoriteFoods = useMemo(
+    () => foods.filter((f) => f.favorite),
+    [foods]
+  );
+
+  const filteredQuickAddFoods = useMemo(() => {
+    if (!quickAddSearch.trim()) return foods;
+    return foods.filter((f) =>
+      f.name.toLowerCase().includes(quickAddSearch.toLowerCase())
+    );
+  }, [foods, quickAddSearch]);
+
+  const filteredFavoriteQuickAddFoods = useMemo(() => {
+    if (!quickAddSearch.trim()) return favoriteFoods;
+    return favoriteFoods.filter((f) =>
+      f.name.toLowerCase().includes(quickAddSearch.toLowerCase())
+    );
+  }, [favoriteFoods, quickAddSearch]);
 
   const selectedFood = foods.find((f) => f.id === selectedFoodId);
   const previewCalories = selectedFood
@@ -524,7 +543,7 @@ function LogDietContent() {
       </div>
 
       {/* ── Main grid ── */}
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
 
         {/* LEFT — Add Food */}
         <div className="space-y-4 self-start rounded-xl bg-slate-800 p-4 ring-1 ring-slate-700/50">
@@ -539,8 +558,37 @@ function LogDietContent() {
             <>
               {/* Quick Add chips */}
               <div>
+                <div className="mb-2 rounded-xl bg-slate-700/25 p-2.5 ring-1 ring-slate-700/50">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Star className="h-3.5 w-3.5 text-emerald-400" />
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-emerald-400/90">Favorite Foods</p>
+                    </div>
+                    <span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300 ring-1 ring-emerald-400/20">
+                      {favoriteFoods.length}
+                    </span>
+                  </div>
+
+                  {favoriteFoods.length === 0 ? (
+                    <p className="px-1 text-xs text-slate-500">No favorites yet. Mark foods with a star in Foods.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {filteredFavoriteQuickAddFoods.slice(0, quickAddOpen ? undefined : 6).map((food) => (
+                        <button
+                          key={`fav-${food.id}`}
+                          type="button"
+                          onClick={() => handleQuickAdd(food)}
+                          className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-200 transition hover:border-emerald-400/40 hover:bg-emerald-500/20 hover:text-emerald-100"
+                        >
+                          {food.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div className="mb-1.5 flex items-center justify-between">
-                  <p className="text-[11px] font-medium uppercase tracking-widest text-slate-600">Quick add</p>
+                  <p className="text-[11px] font-medium uppercase tracking-widest text-slate-600">All foods</p>
                   <button type="button" onClick={() => setQuickAddOpen((o) => !o)}
                     className="text-[11px] text-slate-600 transition hover:text-slate-400">
                     {quickAddOpen ? "less" : `all ${foods.length}`}
@@ -556,7 +604,7 @@ function LogDietContent() {
                 )}
                 <div className="flex flex-wrap gap-1">
                   {(quickAddOpen
-                    ? foods.filter(f => !quickAddSearch || f.name.toLowerCase().includes(quickAddSearch.toLowerCase()))
+                    ? filteredQuickAddFoods
                     : foods.slice(0, 5)
                   ).map(food => (
                     <button key={food.id} type="button" onClick={() => handleQuickAdd(food)}

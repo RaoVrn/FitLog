@@ -26,6 +26,7 @@ export interface Food {
   protein?: number;   // g per unit
   carbs?: number;     // g per unit
   fat?: number;       // g per unit
+  favorite?: boolean;
 }
 
 export interface FoodEntry {
