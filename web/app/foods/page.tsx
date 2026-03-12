@@ -1,11 +1,12 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Food } from "@/types";
 import FoodItem from "@/components/FoodItem";
+import FavoriteFoodsSection from "@/components/FavoriteFoodsSection";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
-import { getFoods, addFood, deleteFood, deleteAllFoods, foodExists, updateFood } from "@/services/foodService";
+import { getFoods, addFood, deleteFood, deleteAllFoods, foodExists, updateFood, toggleFavorite } from "@/services/foodService";
 import { Plus, Search, Loader2, Pencil, X, Check, Flame, Trash2, Database, ChevronDown } from "lucide-react";
 import { SkeletonList } from "@/components/Skeleton";
 import toast from "react-hot-toast";
@@ -85,6 +86,7 @@ function FoodsContent() {
         protein: protein ? parseFloat(protein) : undefined,
         carbs: carbs ? parseFloat(carbs) : undefined,
         fat: fat ? parseFloat(fat) : undefined,
+        favorite: false,
       };
       const id = await addFood(user.uid, newFood);
       setFoods((prev) =>
@@ -108,15 +110,33 @@ function FoodsContent() {
         toast(`"${template.name}" already in your database.`, { icon: "ℹ️" });
         return;
       }
-      const id = await addFood(user.uid, template);
+      const id = await addFood(user.uid, { ...template, favorite: false });
       setFoods((prev) =>
-        [...prev, { ...template, id }].sort((a, b) => a.name.localeCompare(b.name))
+        [...prev, { ...template, id, favorite: false }].sort((a, b) => a.name.localeCompare(b.name))
       );
       toast.success(`${template.name} added!`);
     } catch {
       toast.error("Failed to quick-add food.");
     }
   };
+
+  const handleToggleFavorite = useCallback(async (foodId: string, nextValue: boolean) => {
+    if (!user) return;
+
+    // Optimistic update for immediate feedback.
+    setFoods((prev) =>
+      prev.map((f) => (f.id === foodId ? { ...f, favorite: nextValue } : f))
+    );
+
+    try {
+      await toggleFavorite(user.uid, foodId, nextValue);
+    } catch {
+      setFoods((prev) =>
+        prev.map((f) => (f.id === foodId ? { ...f, favorite: !nextValue } : f))
+      );
+      toast.error("Failed to update favorite.");
+    }
+  }, [user]);
 
   const handleDelete = async (id: string) => {
     if (!user) return;
@@ -177,8 +197,19 @@ function FoodsContent() {
     }
   };
 
-  const filtered = foods.filter((f) =>
-    f.name.toLowerCase().includes(search.toLowerCase())
+  const filtered = useMemo(
+    () => foods.filter((f) => f.name.toLowerCase().includes(search.toLowerCase())),
+    [foods, search]
+  );
+
+  const favorites = useMemo(
+    () => filtered.filter((f) => Boolean(f.favorite)),
+    [filtered]
+  );
+
+  const nonFavorites = useMemo(
+    () => filtered.filter((f) => !f.favorite),
+    [filtered]
   );
 
   return (
@@ -453,9 +484,31 @@ function FoodsContent() {
                   </div>
                 ) : (
                   <div className="food-list-scroll">
+                    <FavoriteFoodsSection
+                      foods={favorites}
+                      onDelete={handleDelete}
+                      onEdit={handleEditStart}
+                      onToggleFavorite={handleToggleFavorite}
+                    />
+
+                    <div className="mb-2 flex items-center gap-1.5">
+                      <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+                        All Foods
+                      </span>
+                      <span className="rounded-full bg-slate-700 px-2 py-0.5 text-[11px] text-slate-300">
+                        {nonFavorites.length}
+                      </span>
+                    </div>
+
                     <div className="space-y-1.5">
-                      {filtered.map((food) => (
-                        <FoodItem key={food.id} food={food} onDelete={handleDelete} onEdit={handleEditStart} />
+                      {nonFavorites.map((food) => (
+                        <FoodItem
+                          key={food.id}
+                          food={food}
+                          onDelete={handleDelete}
+                          onEdit={handleEditStart}
+                          onToggleFavorite={handleToggleFavorite}
+                        />
                       ))}
                     </div>
                   </div>

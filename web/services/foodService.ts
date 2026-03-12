@@ -38,7 +38,7 @@ export async function addFood(
 ): Promise<string> {
   const ref = await addDoc(
     collection(db, "users", userId, "foods"),
-    sanitize({ ...food, name: food.name.trim() })
+    sanitize({ ...food, favorite: food.favorite ?? false, name: food.name.trim() })
   );
   return ref.id;
 }
@@ -58,6 +58,14 @@ export async function updateFood(
   updates: Partial<Omit<Food, "id">>
 ): Promise<void> {
   await updateDoc(doc(db, "users", userId, "foods", foodId), sanitize(updates));
+}
+
+export async function toggleFavorite(
+  userId: string,
+  foodId: string,
+  favorite: boolean
+): Promise<void> {
+  await updateDoc(doc(db, "users", userId, "foods", foodId), { favorite });
 }
 
 export async function deleteFood(

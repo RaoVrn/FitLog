@@ -1,14 +1,16 @@
 import { Trash2, Pencil, MoreVertical } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Food } from "@/types";
+import FavoriteToggle from "@/components/FavoriteToggle";
 
 interface FoodItemProps {
   food: Food;
   onDelete?: (id: string) => void;
   onEdit?:   (food: Food) => void;
+  onToggleFavorite?: (foodId: string, nextValue: boolean) => void;
 }
 
-export default function FoodItem({ food, onDelete, onEdit }: FoodItemProps) {
+export default function FoodItem({ food, onDelete, onEdit, onToggleFavorite }: FoodItemProps) {
   const hasMacros = food.protein !== undefined || food.carbs !== undefined || food.fat !== undefined;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -89,6 +91,14 @@ export default function FoodItem({ food, onDelete, onEdit }: FoodItemProps) {
           )}
         </div>
       </div>
+
+      {onToggleFavorite && food.id && (
+        <FavoriteToggle
+          foodId={food.id}
+          favorite={food.favorite ?? false}
+          onToggle={onToggleFavorite}
+        />
+      )}
 
       {/* ⋮ dropdown menu */}
       {(onEdit || onDelete) && food.id && (

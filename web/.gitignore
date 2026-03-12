@@ -7,14 +7,33 @@ node_modules/
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+.pnpm-store/
+.npm/
 
-# ─── Next.js ─────────────────────────────────────────────────────────────────
+# ─── Next.js build output ────────────────────────────────────────────────────
 .next/
 out/
 build/
 dist/
+.next/analyze/
+.next/dev/lock
 
-# ─── Environment variables (NEVER commit secrets) ────────────────────────────
+# ─── Testing output ───────────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# ─── TypeScript ──────────────────────────────────────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
+
+# ─── Linting/formatting cache ────────────────────────────────────────────────
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# ─── Environment variables (NEVER commit secrets) ───────────────────────────
 .env
 .env.local
 .env.development
@@ -23,35 +42,18 @@ dist/
 .env.test.local
 .env.production
 .env.production.local
+.env.*.local
+!.env.example
+!.env*.example
 
-# ─── Firebase ────────────────────────────────────────────────────────────────
+# ─── Firebase local artifacts ────────────────────────────────────────────────
 .firebase/
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
 database-debug.log
 
-# ─── Testing ─────────────────────────────────────────────────────────────────
-coverage/
-.nyc_output/
-
-# ─── TypeScript ──────────────────────────────────────────────────────────────
-*.tsbuildinfo
-next-env.d.ts
-
-# ─── Linting & formatting cache ──────────────────────────────────────────────
-.eslintcache
-.stylelintcache
-.prettiercache
-
-# ─── Package manager artifacts ───────────────────────────────────────────────
-.pnpm-store/
-.npm/
-# NOTE: package-lock.json / yarn.lock / pnpm-lock.yaml should be committed
-# for reproducible installs. Do NOT add them here.
-pnpm-lock.yaml
-
-# ─── Debug logs ──────────────────────────────────────────────────────────────
+# ─── Debug logs ───────────────────────────────────────────────────────────────
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -83,47 +85,30 @@ $RECYCLE.BIN/
 *.bak
 *.tmp
 
-# ─── Testing ─────────────────────────────────────────────────────────────────
-/coverage/
-.nyc_output/
-playwright-report/
-test-results/
-
-# ─── PWA / service worker (if added later) ───────────────────────────────────
+# ─── PWA / service worker (if added) ─────────────────────────────────────────
 public/sw.js
 public/workbox-*.js
 public/worker-*.js
 
-# ─── Turbopack ──────────────────────────────────────────────────────────────
+# ─── Caches / platform files ─────────────────────────────────────────────────
 .turbo
-
-# ─── Misc ────────────────────────────────────────────────────────────────────
-*.pem
-*.key
-*.cert
-*.tgz
-*.zip
 .vercel
 .netlify
 .cache/
 .parcel-cache/
 .swc/
 
-# ─── Sentry ──────────────────────────────────────────────────────────────────
+# ─── Storybook / Sentry ──────────────────────────────────────────────────────
+storybook-static/
 .sentryclirc
 
-# ─── Storybook ───────────────────────────────────────────────────────────────
-storybook-static/
-
-# ─── Bundle analyzer ─────────────────────────────────────────────────────────
-.next/analyze/
-
-# ─── Vercel ──────────────────────────────────────────────────────────────────
-.vercel
-
-# ─── Prisma ──────────────────────────────────────────────────────────────────
-# prisma/migrations/ (uncomment if you don't want to track migrations)
-
-# ─── Local https certs (mkcert etc.) ─────────────────────────────────────────
+# ─── Certificates / keys ─────────────────────────────────────────────────────
+*.pem
+*.key
+*.cert
 localhost.pem
 localhost-key.pem
+
+# ─── Archives ────────────────────────────────────────────────────────────────
+*.tgz
+*.zip

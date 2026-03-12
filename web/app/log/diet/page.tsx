@@ -561,10 +561,10 @@ function LogDietContent() {
                 <div className="mb-2 rounded-xl bg-slate-700/25 p-2.5 ring-1 ring-slate-700/50">
                   <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <Star className="h-3.5 w-3.5 text-emerald-400" />
-                      <p className="text-[11px] font-semibold uppercase tracking-widest text-emerald-400/90">Favorite Foods</p>
+                      <Star className="h-3.5 w-3.5 text-amber-500" />
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-amber-500/90">Favorite Foods</p>
                     </div>
-                    <span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300 ring-1 ring-emerald-400/20">
+                    <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400 ring-1 ring-amber-500/20">
                       {favoriteFoods.length}
                     </span>
                   </div>
@@ -578,7 +578,7 @@ function LogDietContent() {
                           key={`fav-${food.id}`}
                           type="button"
                           onClick={() => handleQuickAdd(food)}
-                          className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-200 transition hover:border-emerald-400/40 hover:bg-emerald-500/20 hover:text-emerald-100"
+                          className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] text-amber-200 transition hover:border-amber-400/40 hover:bg-amber-500/20 hover:text-amber-100"
                         >
                           {food.name}
                         </button>
