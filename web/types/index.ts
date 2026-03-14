@@ -17,6 +17,13 @@ export interface UserProfile {
   fatGoal?: number;
 }
 
+export interface UserStats {
+  userId: string;
+  currentStreak: number;
+  longestStreak: number;
+  lastActiveDate: string;
+}
+
 export interface Food {
   id?: string;
   userId?: string;

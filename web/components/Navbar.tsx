@@ -14,6 +14,10 @@ import {
   User,
   ChevronDown,
   Scale,
+  HeartPulse,
+  UserCircle2,
+  Settings2,
+  Flame,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -28,17 +32,12 @@ const navLinks = [
 
 const AUTH_PAGES = ["/login", "/signup"];
 
-function getInitials(user: { displayName?: string | null; email?: string | null }): string {
-  if (user.displayName) {
-    return user.displayName
-      .split(" ")
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  }
-  return (user.email?.[0] ?? "?").toUpperCase();
-}
+const profileSectionLinks = [
+  { href: "/profile",          label: "Profile",  icon: UserCircle2 },
+  { href: "/profile/streaks",  label: "Streaks",  icon: Flame       },
+  { href: "/profile/health",   label: "Health",   icon: HeartPulse  },
+  { href: "/profile/settings", label: "Settings", icon: Settings2   },
+];
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -164,21 +163,32 @@ export default function Navbar() {
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-xl bg-slate-800 py-1 shadow-2xl ring-1 ring-slate-700">
+                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-slate-800 py-1 shadow-2xl ring-1 ring-slate-700">
                   <div className="border-b border-slate-700 px-4 py-2.5">
                     <p className="truncate text-xs font-medium text-slate-300">
                       {user.displayName || "Account"}
                     </p>
                     <p className="truncate text-xs text-slate-500">{user.email}</p>
                   </div>
-                  <Link
-                    href="/profile"
-                    onClick={() => setDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-slate-700 hover:text-slate-100"
-                  >
-                    <User className="h-4 w-4 text-slate-400" />
-                    Profile
-                  </Link>
+
+                  <div className="px-4 pb-1 pt-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Profile Pages
+                    </p>
+                  </div>
+                  {profileSectionLinks.map(({ href, label, icon: Icon }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-700 hover:text-slate-100"
+                    >
+                      <Icon className="h-4 w-4 text-slate-400" />
+                      {label}
+                    </Link>
+                  ))}
+
+                  <div className="my-1 border-t border-slate-700/70" />
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-slate-700 hover:text-red-400"

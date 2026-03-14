@@ -4,15 +4,17 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Flame, Dumbbell, PlusCircle, UtensilsCrossed, TrendingUp,
-  Zap, Activity, Target, Scale, Pencil, Check, X, ChevronRight, Utensils,
+  Zap, Target, Scale, Pencil, Check, X, ChevronRight, Utensils,
 } from "lucide-react";
 import CalorieChart from "@/components/CalorieChart";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { MacroBar } from "@/components/MacroDisplay";
 import { SkeletonCard, SkeletonChart } from "@/components/Skeleton";
+import StreakAchievements from "@/components/StreakAchievements";
 import { useAuth } from "@/hooks/useAuth";
-import { getTodayLog, getWeeklyLogs, getWorkoutStreak } from "@/services/logService";
-import { WeeklyData, DailyLog } from "@/types";
+import { getTodayLog, getWeeklyLogs } from "@/services/logService";
+import { getUserStats } from "@/services/userStatsService";
+import { WeeklyData, DailyLog, UserStats } from "@/types";
 import toast from "react-hot-toast";
 
 interface StatCardProps {
@@ -43,7 +45,7 @@ function DashboardContent() {
   const { user, userProfile, updateProfile } = useAuth();
   const [todayLog, setTodayLog] = useState<DailyLog | null>(null);
   const [weeklyData, setWeeklyData] = useState<WeeklyData[]>([]);
-  const [streak, setStreak] = useState(0);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalInput, setGoalInput] = useState("");
@@ -53,14 +55,14 @@ function DashboardContent() {
     const load = async () => {
       setLoading(true);
       try {
-        const [log, weekly, s] = await Promise.all([
+        const [log, weekly, stats] = await Promise.all([
           getTodayLog(user.uid),
           getWeeklyLogs(user.uid),
-          getWorkoutStreak(user.uid),
+          getUserStats(user.uid),
         ]);
         setTodayLog(log);
         setWeeklyData(weekly);
-        setStreak(s);
+        setUserStats(stats);
       } catch {
         toast.error("Failed to load dashboard data");
       } finally {
@@ -90,6 +92,9 @@ function DashboardContent() {
   // Today's recent entries (show last 3, newest first)
   const recentFoods     = (todayLog?.foods     ?? []).slice(-3).reverse();
   const recentExercises = (todayLog?.exercises ?? []).slice(-3).reverse();
+  const currentStreak = userStats?.currentStreak ?? 0;
+  const longestStreak = userStats?.longestStreak ?? 0;
+  const lastActiveDate = userStats?.lastActiveDate ?? "";
 
   const handleSaveGoal = async () => {
     const g = parseInt(goalInput);
@@ -165,11 +170,11 @@ function DashboardContent() {
 
         {/* ── Stats Grid ── */}
         {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(3)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
               icon={Flame}
               label="Consumed"
@@ -194,15 +199,15 @@ function DashboardContent() {
               iconClass={net <= goal ? "text-green-400" : "text-red-400"}
               bgClass={net <= goal ? "bg-green-500/10" : "bg-red-500/10"}
             />
-            <StatCard
-              icon={Activity}
-              label="Workout Streak"
-              value={`${streak} ${streak === 1 ? "day" : "days"}`}
-              sub={streak > 0 ? "Keep it up! 🔥" : "Start today!"}
-              iconClass="text-yellow-400"
-              bgClass="bg-yellow-500/10"
-            />
           </div>
+        )}
+
+        {!loading && (
+          <StreakAchievements
+            currentStreak={currentStreak}
+            longestStreak={longestStreak}
+            lastActiveDate={lastActiveDate}
+          />
         )}
 
         {/* ── Calorie Progress + Macros ── */}

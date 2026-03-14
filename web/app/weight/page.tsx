@@ -9,7 +9,7 @@ import {
 } from "recharts";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
-import { addWeight, getWeights, deleteWeight, updateWeight } from "@/services/weightService";
+import { logWeight, getWeights, deleteWeight, updateWeight } from "@/services/weightService";
 import { WeightEntry } from "@/types";
 import { SkeletonChart, SkeletonList } from "@/components/Skeleton";
 import toast from "react-hot-toast";
@@ -85,7 +85,7 @@ function WeightContent() {
     setSaving(true);
     try {
       const today = new Date().toISOString().split("T")[0];
-      const id = await addWeight(user.uid, { weight: val, date: today, note: note.trim() || undefined });
+      const id = await logWeight(user.uid, { weight: val, date: today, note: note.trim() || undefined });
       const newEntry: WeightEntry = { id, weight: val, date: today, note: note.trim() || undefined };
       setEntries((prev) => [...prev, newEntry].sort((a, b) => a.date.localeCompare(b.date)));
       setWeight(""); setNote("");

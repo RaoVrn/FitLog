@@ -8,10 +8,10 @@ import {
   query,
   orderBy,
   limit,
-  getDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { WeightEntry } from "@/types";
+import { updateUserStreak } from "@/utils/updateStreak";
 
 /** Strip undefined fields so Firestore never receives them */
 function clean(obj: Record<string, unknown>) {
@@ -29,6 +29,15 @@ export async function addWeight(
     clean({ ...entry, userId })
   );
   return ref.id;
+}
+
+export async function logWeight(
+  userId: string,
+  entry: Omit<WeightEntry, "id" | "userId">
+): Promise<string> {
+  const entryId = await addWeight(userId, entry);
+  await updateUserStreak(userId);
+  return entryId;
 }
 
 export async function getWeights(

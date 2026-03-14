@@ -3,12 +3,12 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
   Utensils, UtensilsCrossed, Plus, Trash2, Loader2, CheckCircle,
-  Pencil, Check, X, Search, ChevronDown, SlidersHorizontal, Star,
+  X, Search, ChevronDown, SlidersHorizontal, Star,
 } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { getFoods } from "@/services/foodService";
-import { getTodayLog, saveLog, todayDateStr } from "@/services/logService";
+import { getTodayLog, logDiet, saveLog, todayDateStr } from "@/services/logService";
 import { getUserProfile, saveUserProfile } from "@/services/userService";
 import { calculateCalories } from "@/utils/calorieCalculator";
 import { Food, FoodEntry, Exercise, MealType } from "@/types";
@@ -122,17 +122,27 @@ function LogDietContent() {
 
 
   /** Immediately persists a given entries array to Firestore. */
-  const persistEntries = async (nextEntries: FoodEntry[]) => {
+  const persistEntries = async (
+    nextEntries: FoodEntry[],
+    countAsActivity = false
+  ) => {
     if (!user) return;
     setSyncing(true);
     try {
       const cal = nextEntries.reduce((s, e) => s + e.totalCalories, 0);
-      await saveLog(user.uid, {
+      const nextLog = {
         date: todayDateStr(),
         foods: nextEntries,
         exercises: exercisesRef.current,
         totalCalories: cal,
-      });
+      };
+
+      if (countAsActivity) {
+        await logDiet(user.uid, nextLog);
+      } else {
+        await saveLog(user.uid, nextLog);
+      }
+
       setSavedAt(new Date());
     } catch (err) {
       console.error("Auto-save failed:", err);
@@ -201,7 +211,7 @@ function LogDietContent() {
     setEntries(next);
     setSelectedFoodId("");
     setQuantity("1");
-    await persistEntries(next);
+    await persistEntries(next, true);
   };
 
   const handleQuickAdd = async (food: Food) => {
@@ -236,7 +246,7 @@ function LogDietContent() {
       toast.success(`${food.name} added to ${selectedMealType}.`);
     }
     setEntries(next);
-    await persistEntries(next);
+    await persistEntries(next, true);
   };
 
   const handleClearAll = async () => {

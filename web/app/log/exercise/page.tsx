@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import {
   Dumbbell, Plus, Timer, Repeat, Flame, Loader2, CheckCircle,
-  Pencil, Check, X, Trash2, AlertCircle, Search, ChevronDown,
+  Pencil, Check, X, Trash2, Search, ChevronDown,
 } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { getTodayLog } from "@/services/logService";
 import {
-  addExerciseToTodayLog,
+  logExercise,
   updateExerciseInTodayLog,
   deleteExerciseFromTodayLog,
   clearAllExercisesFromTodayLog,
@@ -114,7 +114,7 @@ function LogExerciseContent() {
           caloriesBurned: t.caloriesBurned,
           ...(isDuration ? { duration: 30 } : { sets: 3, reps: 10 }),
         };
-        await addExerciseToTodayLog(user.uid, exercise);
+        await logExercise(user.uid, exercise);
         setExercises((prev) => [...prev, exercise]);
         toast.success(`${t.name} added.`);
       }
@@ -205,7 +205,7 @@ function LogExerciseContent() {
             ? { sets: parseInt(sets) || 1, reps: parseInt(reps) || 1 }
             : { duration: parseInt(duration) || 1 }),
         };
-        await addExerciseToTodayLog(user.uid, exercise);
+        await logExercise(user.uid, exercise);
         setExercises((prev) => [...prev, exercise]);
         toast.success(`${exercise.name} added.`);
       }

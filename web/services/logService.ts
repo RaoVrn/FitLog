@@ -10,6 +10,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { DailyLog, WeeklyData } from "@/types";
+import { updateUserStreak } from "@/utils/updateStreak";
 
 export function todayDateStr(): string {
   return new Date().toISOString().split("T")[0];
@@ -59,6 +60,14 @@ export async function saveLog(
   });
 }
 
+export async function logDiet(
+  userId: string,
+  log: Omit<DailyLog, "id" | "userId">
+): Promise<void> {
+  await saveLog(userId, log);
+  await updateUserStreak(userId);
+}
+
 export async function getLogs(
   userId: string,
   limitCount = 30
@@ -101,33 +110,4 @@ export async function getWeeklyLogs(userId: string): Promise<WeeklyData[]> {
     }
     return { day: dayName, date, calories: 0, burned: 0, net: 0 };
   });
-}
-
-/**
- * Calculate the current consecutive-day workout streak.
- * A day counts if the user logged at least one exercise.
- */
-export async function getWorkoutStreak(userId: string): Promise<number> {
-  let streak = 0;
-  // Check up to 90 days back
-  for (let i = 0; i < 90; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split("T")[0];
-    const snap = await getDoc(doc(db, "users", userId, "logs", dateStr));
-    if (snap.exists()) {
-      const log = snap.data() as DailyLog;
-      if (log.exercises && log.exercises.length > 0) {
-        streak++;
-      } else {
-        // Allow today to not have exercises yet without breaking streak
-        if (i === 0) continue;
-        break;
-      }
-    } else {
-      if (i === 0) continue; // today might not exist yet
-      break;
-    }
-  }
-  return streak;
 }

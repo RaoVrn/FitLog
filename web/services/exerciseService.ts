@@ -1,5 +1,6 @@
 import { Exercise } from "@/types";
 import { getTodayLog, saveLog, todayDateStr } from "./logService";
+import { updateUserStreak } from "@/utils/updateStreak";
 
 /** Strip undefined fields so Firestore never receives them */
 function cleanExercise(e: Exercise): Exercise {
@@ -9,7 +10,7 @@ function cleanExercise(e: Exercise): Exercise {
 }
 
 /** CREATE — append a new exercise to today's log */
-export async function addExerciseToTodayLog(
+export async function logExercise(
   userId: string,
   exercise: Exercise
 ): Promise<void> {
@@ -28,6 +29,15 @@ export async function addExerciseToTodayLog(
     totalCalories: foodCalories,
     totalBurned,
   });
+
+  await updateUserStreak(userId);
+}
+
+export async function addExerciseToTodayLog(
+  userId: string,
+  exercise: Exercise
+): Promise<void> {
+  await logExercise(userId, exercise);
 }
 
 /** UPDATE — replace an existing exercise (matched by id) in today's log */
